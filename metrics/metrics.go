@@ -7,10 +7,11 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/supporterino/shelly_exporter/client"
+	"github.com/supporterino/shelly_exporter/config"
 )
 
 // Register initializes Prometheus metrics and starts periodic API fetching.
-func Register() {
+func Register(cfg *config.Config) {
 	// Register all metrics with Prometheus
 	prometheus.MustRegister(
 		apiCounter,
@@ -43,7 +44,7 @@ func Register() {
 		wifiRSSIGauge,
 	)
 
-	apiClient := client.NewAPIClient("http://10.1.255.111", 10*time.Second)
+	apiClient := client.NewAPIClient(cfg.DeviceAddress, 10*time.Second)
 
 	// Start fetching metrics periodically
 	go func() {
@@ -52,7 +53,7 @@ func Register() {
 			if err != nil {
 				log.Printf("Error fetching metrics: %v", err)
 			}
-			time.Sleep(30 * time.Second) // Adjust interval as needed
+			time.Sleep(time.Duration(cfg.UpdateInterval) * time.Second) // Adjust interval as needed
 		}
 	}()
 }

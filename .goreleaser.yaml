@@ -32,7 +32,7 @@ archives:
 
 dockers:
   - image_templates:
-      - "ghcr.io/{{ .ProjectName }}:{{ .Tag }}"
+      - "ghcr.io/supporterino/{{ .ProjectName }}:{{ .Tag }}"
     dockerfile: Dockerfile
 
 changelog:
