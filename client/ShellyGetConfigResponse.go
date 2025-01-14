@@ -2,8 +2,8 @@ package client
 
 type ShellyGetConfigResponse struct {
 	BLE struct {
-		Enable   bool `json:"enable"`
-		RPC      struct {
+		Enable bool `json:"enable"`
+		RPC    struct {
 			Enable bool `json:"enable"`
 		} `json:"rpc"`
 		Observer struct {
@@ -15,17 +15,17 @@ type ShellyGetConfigResponse struct {
 		Server string `json:"server"`
 	} `json:"cloud"`
 	MQTT struct {
-		Enable          bool    `json:"enable"`
-		Server          *string `json:"server"`
-		ClientID        string  `json:"client_id"`
-		User            *string `json:"user"`
-		SSLCA           *string `json:"ssl_ca"`
-		TopicPrefix     string  `json:"topic_prefix"`
-		RPCNotifications bool   `json:"rpc_ntf"`
-		StatusNotifications bool `json:"status_ntf"`
-		UseClientCert   bool    `json:"use_client_cert"`
-		EnableRPC       bool    `json:"enable_rpc"`
-		EnableControl   bool    `json:"enable_control"`
+		Enable              bool   `json:"enable"`
+		Server              string `json:"server"`
+		ClientID            string `json:"client_id"`
+		User                string `json:"user"`
+		SSLCA               string `json:"ssl_ca"`
+		TopicPrefix         string `json:"topic_prefix"`
+		RPCNotifications    bool   `json:"rpc_ntf"`
+		StatusNotifications bool   `json:"status_ntf"`
+		UseClientCert       bool   `json:"use_client_cert"`
+		EnableRPC           bool   `json:"enable_rpc"`
+		EnableControl       bool   `json:"enable_control"`
 	} `json:"mqtt"`
 	PlugsUI struct {
 		LEDs struct {
@@ -45,9 +45,9 @@ type ShellyGetConfigResponse struct {
 			} `json:"power"`
 		} `json:"leds"`
 		NightMode struct {
-			Enable        bool      `json:"enable"`
-			Brightness    float64   `json:"brightness"`
-			ActiveBetween []string  `json:"active_between"`
+			Enable        bool     `json:"enable"`
+			Brightness    float64  `json:"brightness"`
+			ActiveBetween []string `json:"active_between"`
 		} `json:"night_mode"`
 	} `json:"plugs_ui"`
 	Controls map[string]struct {
@@ -55,7 +55,7 @@ type ShellyGetConfigResponse struct {
 	} `json:"controls"`
 	Switch0 struct {
 		ID           int     `json:"id"`
-		Name         *string `json:"name"`
+		Name         string  `json:"name"`
 		InitialState string  `json:"initial_state"`
 		AutoOn       bool    `json:"auto_on"`
 		AutoOnDelay  float64 `json:"auto_on_delay"`
@@ -102,24 +102,24 @@ type ShellyGetConfigResponse struct {
 			} `json:"range_extender"`
 		} `json:"ap"`
 		STA struct {
-			SSID      string  `json:"ssid"`
-			IsOpen    bool    `json:"is_open"`
-			Enable    bool    `json:"enable"`
-			IPv4Mode  string  `json:"ipv4mode"`
-			IP        *string `json:"ip"`
-			Netmask   *string `json:"netmask"`
-			GW        *string `json:"gw"`
-			Nameserver *string `json:"nameserver"`
+			SSID       string `json:"ssid"`
+			IsOpen     bool   `json:"is_open"`
+			Enable     bool   `json:"enable"`
+			IPv4Mode   string `json:"ipv4mode"`
+			IP         string `json:"ip"`
+			Netmask    string `json:"netmask"`
+			GW         string `json:"gw"`
+			Nameserver string `json:"nameserver"`
 		} `json:"sta"`
 		STA1 struct {
-			SSID      *string `json:"ssid"`
-			IsOpen    bool    `json:"is_open"`
-			Enable    bool    `json:"enable"`
-			IPv4Mode  string  `json:"ipv4mode"`
-			IP        *string `json:"ip"`
-			Netmask   *string `json:"netmask"`
-			GW        *string `json:"gw"`
-			Nameserver *string `json:"nameserver"`
+			SSID       string `json:"ssid"`
+			IsOpen     bool   `json:"is_open"`
+			Enable     bool   `json:"enable"`
+			IPv4Mode   string `json:"ipv4mode"`
+			IP         string `json:"ip"`
+			Netmask    string `json:"netmask"`
+			GW         string `json:"gw"`
+			Nameserver string `json:"nameserver"`
 		} `json:"sta1"`
 		Roam struct {
 			RSSIThreshold int `json:"rssi_thr"`
@@ -127,8 +127,8 @@ type ShellyGetConfigResponse struct {
 		} `json:"roam"`
 	} `json:"wifi"`
 	WS struct {
-		Enable  bool    `json:"enable"`
-		Server  *string `json:"server"`
-		SSLCA   string  `json:"ssl_ca"`
+		Enable bool   `json:"enable"`
+		Server string `json:"server"`
+		SSLCA  string `json:"ssl_ca"`
 	} `json:"ws"`
 }
