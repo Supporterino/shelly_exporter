@@ -30,6 +30,11 @@ archives:
       - goos: windows
         format: zip
 
+dockers:
+  - image_templates:
+      - "ghcr.io/{{ .ProjectName }}:{{ .Tag }}"
+    dockerfile: Dockerfile
+
 changelog:
   sort: asc
   filters:
