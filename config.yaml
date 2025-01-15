@@ -3,5 +3,3 @@ logLevel: info
 deviceUpdateInterval: 30
 devices:
 - host: 10.1.255.111
-  username: ""
-  password: ""

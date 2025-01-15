@@ -16,6 +16,8 @@ func RegisterSmartPlugS(device *devices.DeviceConfig, updateInterval time.Durati
 	// Register all metrics with Prometheus
 	prometheus.MustRegister(
 		apiCounter,
+		deviceInfoGauge,
+		authEnabledGauge,
 		bleEnabledGauge,
 		bleRPCEnabledGauge,
 		bleObserverEnabledGauge,
@@ -63,7 +65,12 @@ func RegisterSmartPlugS(device *devices.DeviceConfig, updateInterval time.Durati
 func fetchAndUpdateMetrics(apiClient *client.APIClient) error {
 	slog.Info("Fetching and updating metrics")
 
-	err := fetchAndUpdateConfigMetrics(apiClient)
+	err := fetchAndUpdateDeviceInfo(apiClient)
+	if err != nil {
+		return fmt.Errorf("failed to update information metrics: %w", err)
+	}
+
+	err = fetchAndUpdateConfigMetrics(apiClient)
 	if err != nil {
 		return fmt.Errorf("failed to update config metrics: %w", err)
 	}

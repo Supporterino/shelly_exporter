@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
-	"log/slog"
 )
 
 type APIClient struct {
@@ -26,7 +26,7 @@ func NewAPIClient(baseURL string, timeout time.Duration) *APIClient {
 
 // FetchData makes a GET request to the specified endpoint and parses the response.
 func (c *APIClient) FetchData(endpoint string, result interface{}) error {
-	url := fmt.Sprintf("%s%s", c.BaseURL, endpoint)
+	url := fmt.Sprintf("http://%s%s", c.BaseURL, endpoint)
 	slog.Info("Fetching data", slog.String("url", url))
 
 	resp, err := c.Client.Get(url)
