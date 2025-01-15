@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/caarlos0/env"
@@ -13,8 +13,17 @@ import (
 func main() {
 	cfg := config.Config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("%+v", err)
+		slog.Error("Error parsing config", slog.Any("error", err))
 	}
+
+	// Configure slog based on the debug flag
+	var logger *slog.Logger
+	if cfg.Debug {
+		logger = slog.New(slog.NewTextHandler(slog.StderrHandlerOptions{Level: slog.LevelDebug}))
+	} else {
+		logger = slog.New(slog.NewTextHandler(slog.StderrHandlerOptions{Level: slog.LevelInfo}))
+	}
+	slog.SetDefault(logger)
 
 	// Register custom metrics
 	metrics.Register(&cfg)
@@ -22,8 +31,8 @@ func main() {
 	// Expose metrics endpoint
 	http.Handle("/metrics", promhttp.Handler())
 
-	log.Println("Starting Prometheus exporter on :8080")
+	logger.Info("Starting Prometheus exporter", slog.String("address", cfg.ListenAddress))
 	if err := http.ListenAndServe(cfg.ListenAddress, nil); err != nil {
-		log.Fatalf("Error starting HTTP server: %v", err)
+		logger.Error("Error starting HTTP server", slog.Any("error", err))
 	}
 }

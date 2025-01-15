@@ -2,8 +2,8 @@ package metrics
 
 import (
 	"fmt"
-	"log"
 	"time"
+	"log/slog"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/supporterino/shelly_exporter/client"
@@ -12,6 +12,8 @@ import (
 
 // Register initializes Prometheus metrics and starts periodic API fetching.
 func Register(cfg *config.Config) {
+	slog.Info("Registering Prometheus metrics")
+
 	// Register all metrics with Prometheus
 	prometheus.MustRegister(
 		apiCounter,
@@ -51,7 +53,7 @@ func Register(cfg *config.Config) {
 		for {
 			err := fetchAndUpdateMetrics(apiClient)
 			if err != nil {
-				log.Printf("Error fetching metrics: %v", err)
+				slog.Error("Error fetching metrics", slog.Any("error", err))
 			}
 			time.Sleep(time.Duration(cfg.UpdateInterval) * time.Second) // Adjust interval as needed
 		}
@@ -60,6 +62,8 @@ func Register(cfg *config.Config) {
 
 // fetchAndUpdateMetrics fetches data from the API and updates Prometheus metrics.
 func fetchAndUpdateMetrics(apiClient *client.APIClient) error {
+	slog.Info("Fetching and updating metrics")
+
 	err := fetchAndUpdateConfigMetrics(apiClient)
 	if err != nil {
 		return fmt.Errorf("failed to update config metrics: %w", err)
@@ -70,6 +74,7 @@ func fetchAndUpdateMetrics(apiClient *client.APIClient) error {
 		return fmt.Errorf("failed to update status metrics: %w", err)
 	}
 
+	slog.Info("Successfully updated metrics")
 	return nil
 }
 
