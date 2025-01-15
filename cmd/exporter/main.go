@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,20 +12,24 @@ import (
 )
 
 func main() {
-	// Configure slog based on the debug flag
-	// var logger *slog.Logger
-	var logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-
-	slog.SetDefault(logger)
-
 	cfgPath, err := config.ParseFlags()
 	if err != nil {
-		logger.Error("Error parsing config path:", slog.Any("error", err))
+		log.Fatal("Error parsing config path:", slog.Any("error", err))
 	}
 	cfg, err := config.NewConfig(cfgPath)
 	if err != nil {
-		logger.Error("Error loading config:", slog.Any("error", err))
+		log.Fatal("Error loading config:", slog.Any("error", err))
 	}
+
+	// Configure slog based on the debug flag
+	var logger *slog.Logger
+	if cfg.Debug {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	} else {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	}
+
+	slog.SetDefault(logger)
 
 	// Register custom metrics
 	metrics.Register(cfg)

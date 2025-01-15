@@ -11,7 +11,7 @@ import (
 
 type YamlConfig struct {
 	ListenAddress        string             `yaml:"listenAddress"`
-	LogLevel             string             `yaml:"logLevel"`
+	Debug                bool               `yaml:"debug"`
 	DeviceUpdateInterval time.Duration      `yaml:"deviceUpdateInterval"`
 	Devices              []DeviceYamlConfig `yaml:"devices"`
 }

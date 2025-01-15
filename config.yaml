@@ -1,5 +1,7 @@
 listenAddress: :8080
-logLevel: info
+debug: false
 deviceUpdateInterval: 30
-devices:
-- host: 10.1.255.111
+# devices:
+# - host: 10.1.255.111
+#   username: ""
+#   password: ""
