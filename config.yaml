@@ -1,0 +1,5 @@
+listenAddress: :8080
+logLevel: info
+deviceUpdateInterval: 30
+devices:
+- ip: 10.1.255.111
