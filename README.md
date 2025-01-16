@@ -4,6 +4,27 @@ Shelly Prometheus Exporter is a Go-based application that collects metrics from 
 
 ## Usage
 
+## Metrics
+
+### Shelly.GetStatus
+
+# Metrics Table
+
+| **Metric Name**              | **Description**                                                                                 | **Labels**                              | **Example**                                                                                     |
+|-------------------------------|---------------------------------------------------------------------------------------------|-----------------------------------------|-------------------------------------------------------------------------------------------------|
+| `shelly_input_state`          | State of each input (`1` for active, `0` for inactive).                                       | `device_mac`, `input_id`               | `shelly_input_state{device_mac="A8032ABE54DC",input_id="input:0"} 1`                           |
+| `shelly_switch_output`        | Output state of each switch (`1` for active, `0` for inactive).                              | `device_mac`, `switch_id`              | `shelly_switch_output{device_mac="A8032ABE54DC",switch_id="switch:0"} 1`                      |
+| `shelly_switch_apower`        | Active power of each switch in watts.                                                        | `device_mac`, `switch_id`              | `shelly_switch_apower{device_mac="A8032ABE54DC",switch_id="switch:0"} 8.9`                    |
+| `shelly_switch_voltage`       | Voltage of each switch in volts.                                                             | `device_mac`, `switch_id`              | `shelly_switch_voltage{device_mac="A8032ABE54DC",switch_id="switch:0"} 237.5`                 |
+| `shelly_switch_aenergy_total` | Total accumulated energy of each switch in kWh.                                              | `device_mac`, `switch_id`              | `shelly_switch_aenergy_total{device_mac="A8032ABE54DC",switch_id="switch:0"} 6.532`           |
+| `shelly_switch_temperature_c` | Temperature of each switch in Celsius.                                                      | `device_mac`, `switch_id`              | `shelly_switch_temperature_c{device_mac="A8032ABE54DC",switch_id="switch:0"} 23.5`            |
+| `shelly_sys_uptime_seconds`   | Uptime of the device in seconds.                                                             | `device_mac`                           | `shelly_sys_uptime_seconds{device_mac="A8032ABE54DC"} 11081`                                  |
+| `shelly_sys_ram_free`         | Free RAM in bytes.                                                                           | `device_mac`                           | `shelly_sys_ram_free{device_mac="A8032ABE54DC"} 151560`                                       |
+| `shelly_sys_fs_free`          | Free filesystem space in bytes.                                                              | `device_mac`                           | `shelly_sys_fs_free{device_mac="A8032ABE54DC"} 180224`                                        |
+| `shelly_wifi_rssi`            | WiFi signal strength in dBm.                                                                 | `device_mac`, `wifi_ssid`              | `shelly_wifi_rssi{device_mac="A8032ABE54DC",wifi_ssid="Brandmeldezentrale"} -54`              |
+| `shelly_eth_ip`               | Indicates the Ethernet IP address of the device (label `eth_ip` holds the IP address).       | `device_mac`, `eth_ip`                 | `shelly_eth_ip{device_mac="A8032ABE54DC",eth_ip="10.33.55.170"} 1`                            |
+
+
 ## Development
 
 ### Project structure

@@ -16,35 +16,17 @@ func RegisterSmartPlugS(device *devices.DeviceConfig, updateInterval time.Durati
 	// Register all metrics with Prometheus
 	prometheus.MustRegister(
 		apiCounter,
-		deviceInfoGauge,
-		authEnabledGauge,
-		bleEnabledGauge,
-		bleRPCEnabledGauge,
-		bleObserverEnabledGauge,
-		cloudEnabledGauge,
-		mqttEnabledGauge,
-		mqttRPCNotificationsGauge,
-		mqttStatusNotificationsGauge,
-		switchAutoOnGauge,
-		switchAutoOnDelayGauge,
-		switchPowerLimitGauge,
-		switchVoltageLimitGauge,
-		switchCurrentLimitGauge,
-		wifiAPEnabledGauge,
-		wifiSTAEnabledGauge,
-		wifiRSSIThresholdGauge,
-		cloudConnectedGauge,
-		mqttConnectedGauge,
+		inputStateGauge,
 		switchOutputGauge,
 		switchAPowerGauge,
 		switchVoltageGauge,
-		switchCurrentGauge,
-		switchEnergyTotalGauge,
+		switchAEnergyTotalGauge,
 		switchTemperatureCGauge,
 		sysUptimeGauge,
 		sysRAMFreeGauge,
 		sysFSFreeGauge,
 		wifiRSSIGauge,
+		ethIPGauge,
 	)
 
 	apiClient := client.NewAPIClient(device.Host, 10*time.Second)
@@ -90,4 +72,12 @@ func boolToFloat64(b bool) float64 {
 		return 1
 	}
 	return 0
+}
+
+// coalesce returns the first non-nil string or a default value.
+func coalesce(s *string, defaultVal string) string {
+	if s != nil {
+		return *s
+	}
+	return defaultVal
 }

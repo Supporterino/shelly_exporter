@@ -8,45 +8,35 @@ import (
 )
 
 var (
-	// Cloud Metrics
-	cloudConnectedGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_cloud_connected",
-		Help: "Indicates if the device is connected to the cloud.",
-	}, []string{"device_mac"})
+	// Inputs
+	inputStateGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "shelly_input_state",
+		Help: "State of each input (true=1, false=0).",
+	}, []string{"device_mac", "input_id"})
 
-	// MQTT Metrics
-	mqttConnectedGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_mqtt_connected",
-		Help: "Indicates if the device is connected to the MQTT broker.",
-	}, []string{"device_mac"})
-
-	// Switch Metrics
+	// Switches
 	switchOutputGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "shelly_switch_output",
-		Help: "Indicates if the switch output is active.",
+		Help: "Output state of each switch (true=1, false=0).",
 	}, []string{"device_mac", "switch_id"})
 	switchAPowerGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "shelly_switch_apower",
-		Help: "Active power in watts.",
+		Help: "Active power of each switch in watts.",
 	}, []string{"device_mac", "switch_id"})
 	switchVoltageGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "shelly_switch_voltage",
-		Help: "Voltage in volts.",
+		Help: "Voltage of each switch in volts.",
 	}, []string{"device_mac", "switch_id"})
-	switchCurrentGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_switch_current",
-		Help: "Current in amperes.",
-	}, []string{"device_mac", "switch_id"})
-	switchEnergyTotalGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	switchAEnergyTotalGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "shelly_switch_aenergy_total",
-		Help: "Total accumulated energy in kWh.",
+		Help: "Total accumulated energy of each switch in kWh.",
 	}, []string{"device_mac", "switch_id"})
 	switchTemperatureCGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "shelly_switch_temperature_c",
-		Help: "Switch temperature in Celsius.",
+		Help: "Temperature of each switch in Celsius.",
 	}, []string{"device_mac", "switch_id"})
 
-	// System Metrics
+	// System
 	sysUptimeGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "shelly_sys_uptime_seconds",
 		Help: "Uptime of the device in seconds.",
@@ -60,56 +50,103 @@ var (
 		Help: "Free filesystem space in bytes.",
 	}, []string{"device_mac"})
 
-	// WiFi Metrics
+	// WiFi
 	wifiRSSIGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "shelly_wifi_rssi",
 		Help: "WiFi signal strength in dBm.",
 	}, []string{"device_mac", "wifi_ssid"})
+
+	// Ethernet
+	ethIPGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "shelly_eth_ip",
+		Help: "Exposes the Ethernet IP address as a label.",
+	}, []string{"device_mac", "eth_ip"})
 )
 
 func fetchAndUpdateStatusMetrics(apiClient *client.APIClient) error {
-	var status client.ShellyGetStatusResponse
-	err := apiClient.FetchData("/rpc/Shelly.GetStatus", &status)
+	status, err := fetchAndProcessStatus(apiClient)
+
 	if err != nil {
-		return fmt.Errorf("error fetching status: %w", err)
+		return fmt.Errorf("failed to fetch status: %w", err)
 	}
 
-	updateStatusMetrics(status)
+	updateStatusMetrics(*status)
 	return nil
 }
 
+// fetchAndProcessStatus fetches the status and processes dynamic keys.
+func fetchAndProcessStatus(apiClient *client.APIClient) (*client.ShellyGetStatusResponse, error) {
+	var status client.ShellyGetStatusResponse
+	err := apiClient.FetchData("/rpc/Shelly.GetStatus", &status)
+
+	if err != nil {
+		return nil, fmt.Errorf("error fetching status: %w", err)
+	}
+
+	return &status, nil
+}
+
 func updateStatusMetrics(status client.ShellyGetStatusResponse) {
-	labels := map[string]string{
-		"device_mac": status.Sys.MAC,
+	deviceMAC := status.Sys.MAC
+
+	// Inputs
+	for inputID, input := range status.Inputs {
+		inputStateGauge.With(prometheus.Labels{
+			"device_mac": deviceMAC,
+			"input_id":   inputID,
+		}).Set(boolToFloat64(input.State))
 	}
 
-	// Cloud Metrics
-	cloudConnectedGauge.With(labels).Set(boolToFloat64(status.Cloud.Connected))
+	// Switches
+	for switchID, sw := range status.Switches {
+		switchOutputGauge.With(prometheus.Labels{
+			"device_mac": deviceMAC,
+			"switch_id":  switchID,
+		}).Set(boolToFloat64(sw.Output))
 
-	// MQTT Metrics
-	mqttConnectedGauge.With(labels).Set(boolToFloat64(status.MQTT.Connected))
+		switchAPowerGauge.With(prometheus.Labels{
+			"device_mac": deviceMAC,
+			"switch_id":  switchID,
+		}).Set(sw.APower)
 
-	// Switch Metrics
-	switchLabels := map[string]string{
-		"device_mac": status.Sys.MAC,
-		"switch_id":  "switch:0",
+		switchVoltageGauge.With(prometheus.Labels{
+			"device_mac": deviceMAC,
+			"switch_id":  switchID,
+		}).Set(sw.Voltage)
+
+		switchAEnergyTotalGauge.With(prometheus.Labels{
+			"device_mac": deviceMAC,
+			"switch_id":  switchID,
+		}).Set(sw.AEnergy.Total)
+
+		switchTemperatureCGauge.With(prometheus.Labels{
+			"device_mac": deviceMAC,
+			"switch_id":  switchID,
+		}).Set(sw.Temperature.TC)
 	}
-	switchOutputGauge.With(switchLabels).Set(boolToFloat64(status.Switch0.Output))
-	switchAPowerGauge.With(switchLabels).Set(status.Switch0.APower)
-	switchVoltageGauge.With(switchLabels).Set(status.Switch0.Voltage)
-	switchCurrentGauge.With(switchLabels).Set(status.Switch0.Current)
-	switchEnergyTotalGauge.With(switchLabels).Set(status.Switch0.AEnergy.Total)
-	switchTemperatureCGauge.With(switchLabels).Set(status.Switch0.Temperature.TC)
 
-	// System Metrics
-	sysUptimeGauge.With(labels).Set(float64(status.Sys.Uptime))
-	sysRAMFreeGauge.With(labels).Set(float64(status.Sys.RAMFree))
-	sysFSFreeGauge.With(labels).Set(float64(status.Sys.FSFree))
+	// System
+	sysUptimeGauge.With(prometheus.Labels{
+		"device_mac": deviceMAC,
+	}).Set(float64(status.Sys.Uptime))
 
-	// WiFi Metrics
-	wifiLabels := map[string]string{
-		"device_mac": status.Sys.MAC,
-		"wifi_ssid":  status.WiFi.SSID,
-	}
-	wifiRSSIGauge.With(wifiLabels).Set(float64(status.WiFi.RSSI))
+	sysRAMFreeGauge.With(prometheus.Labels{
+		"device_mac": deviceMAC,
+	}).Set(float64(status.Sys.RAMFree))
+
+	sysFSFreeGauge.With(prometheus.Labels{
+		"device_mac": deviceMAC,
+	}).Set(float64(status.Sys.FSFree))
+
+	// WiFi
+	wifiRSSIGauge.With(prometheus.Labels{
+		"device_mac": deviceMAC,
+		"wifi_ssid":  coalesce(status.Wifi.SSID, "unknown"),
+	}).Set(float64(status.Wifi.RSSI))
+
+	// Ethernet
+	ethIPGauge.With(prometheus.Labels{
+		"device_mac": deviceMAC,
+		"eth_ip":     coalesce(&status.Eth.IP, "unknown"),
+	}).Set(1)
 }
