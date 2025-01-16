@@ -19,6 +19,7 @@ type Switch struct {
 	TimerDuration  int         `json:"timer_duration,omitempty"`
 	APower         float64     `json:"apower"`
 	Voltage        float64     `json:"voltage"`
+	Current        float64     `json:"current"`
 	AEnergy        Energy      `json:"aenergy"`
 	Temperature    Temperature `json:"temperature"`
 }

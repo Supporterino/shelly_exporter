@@ -1,4 +1,4 @@
-package ShellySmartPlugS
+package ShellyGetConfig
 
 import (
 	"fmt"
@@ -7,28 +7,27 @@ import (
 	"github.com/supporterino/shelly_exporter/client"
 )
 
-type Metrics struct {
+type ConfigMetrics struct {
 	BLEEnabled           *prometheus.GaugeVec
 	CloudEnabled         *prometheus.GaugeVec
 	CloudServer          *prometheus.GaugeVec
 	EthEnabled           *prometheus.GaugeVec
 	EthIPv4Mode          *prometheus.GaugeVec
 	InputStates          *prometheus.GaugeVec
-	SwitchStates         *prometheus.GaugeVec
+	SwitchAutoOnState    *prometheus.GaugeVec
 	SwitchAutoOnDelays   *prometheus.GaugeVec
 	SwitchAutoOffDelays  *prometheus.GaugeVec
 	SwitchPowerLimits    *prometheus.GaugeVec
-	DeviceInfo           *prometheus.GaugeVec
 	WifiAPEnabled        *prometheus.GaugeVec
 	WifiSTAEnabled       *prometheus.GaugeVec
 	WifiRoamingThreshold *prometheus.GaugeVec
 }
 
-var metrics *Metrics
+var metrics *ConfigMetrics
 
 // RegisterMetrics initializes and registers the Prometheus metrics
-func RegisterConfigMetrics() {
-	metrics = &Metrics{
+func RegisterShelly_GetConfigMetrics() {
+	metrics = &ConfigMetrics{
 		BLEEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "ble_enabled",
 			Help: "Indicates if BLE is enabled (1 for true, 0 for false)",
@@ -50,12 +49,12 @@ func RegisterConfigMetrics() {
 			Help: "Ethernet IPv4 mode (labels include mode)",
 		}, []string{"device_mac", "mode"}),
 		InputStates: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "input_state",
+			Name: "input_inverted",
 			Help: "State of inputs (labels include input ID and type)",
 		}, []string{"device_mac", "input_id", "type"}),
-		SwitchStates: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "switch_state",
-			Help: "State of switches (labels include switch ID)",
+		SwitchAutoOnState: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "switch_auto_on",
+			Help: "State of the automatic on feature (labels include switch ID)",
 		}, []string{"device_mac", "switch_id"}),
 		SwitchAutoOnDelays: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "switch_auto_on_delay",
@@ -69,10 +68,6 @@ func RegisterConfigMetrics() {
 			Name: "switch_power_limit",
 			Help: "Power limit for switches (in watts)",
 		}, []string{"device_mac", "switch_id"}),
-		DeviceInfo: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "device_info",
-			Help: "Device information (labels include device name, MAC, and firmware ID)",
-		}, []string{"device_mac", "name", "fw_id"}),
 		WifiAPEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "wifi_ap_enabled",
 			Help: "Indicates if Wi-Fi AP is enabled (1 for true, 0 for false)",
@@ -95,18 +90,17 @@ func RegisterConfigMetrics() {
 		metrics.EthEnabled,
 		metrics.EthIPv4Mode,
 		metrics.InputStates,
-		metrics.SwitchStates,
+		metrics.SwitchAutoOnState,
 		metrics.SwitchAutoOnDelays,
 		metrics.SwitchAutoOffDelays,
 		metrics.SwitchPowerLimits,
-		metrics.DeviceInfo,
 		metrics.WifiAPEnabled,
 		metrics.WifiSTAEnabled,
 		metrics.WifiRoamingThreshold,
 	)
 }
 
-func fetchAndUpdateConfigMetrics(apiClient *client.APIClient) error {
+func UpdateShelly_GetConfigMetrics(apiClient *client.APIClient) error {
 	var config client.ShellyGetConfigResponse
 	err := apiClient.FetchData("/rpc/Shelly.GetConfig", &config)
 	if err != nil {
@@ -119,7 +113,7 @@ func fetchAndUpdateConfigMetrics(apiClient *client.APIClient) error {
 }
 
 // UpdateMetrics populates the metrics from the config structure
-func (m *Metrics) UpdateMetrics(config client.ShellyGetConfigResponse) {
+func (m *ConfigMetrics) UpdateMetrics(config client.ShellyGetConfigResponse) {
 	// BLE
 	if config.BLE.Enable {
 		m.BLEEnabled.WithLabelValues(config.Sys.Device.MAC).Set(1)
@@ -158,18 +152,11 @@ func (m *Metrics) UpdateMetrics(config client.ShellyGetConfigResponse) {
 		if sw.AutoOn {
 			state = 1.0
 		}
-		m.SwitchStates.WithLabelValues(config.Sys.Device.MAC, id).Set(state)
+		m.SwitchAutoOnState.WithLabelValues(config.Sys.Device.MAC, id).Set(state)
 		m.SwitchAutoOnDelays.WithLabelValues(config.Sys.Device.MAC, id).Set(float64(sw.AutoOnDelay))
 		m.SwitchAutoOffDelays.WithLabelValues(config.Sys.Device.MAC, id).Set(float64(sw.AutoOffDelay))
 		m.SwitchPowerLimits.WithLabelValues(config.Sys.Device.MAC, id).Set(float64(sw.PowerLimit))
 	}
-
-	// System Info
-	m.DeviceInfo.WithLabelValues(
-		config.Sys.Device.MAC,
-		*config.Sys.Device.Name,
-		config.Sys.Device.FWID,
-	).Set(1)
 
 	// Wi-Fi
 	if config.Wifi.AP.Enable {

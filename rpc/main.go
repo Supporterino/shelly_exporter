@@ -1,34 +1,22 @@
-package ShellySmartPlugS
+package rpc
 
 import (
 	"fmt"
 	"log/slog"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/supporterino/shelly_exporter/client"
-	"github.com/supporterino/shelly_exporter/devices"
+	ShellyGetConfig "github.com/supporterino/shelly_exporter/rpc/Shelly.GetConfig"
+	ShellyGetDeviceInfo "github.com/supporterino/shelly_exporter/rpc/Shelly.GetDeviceInfo"
+	ShellyGetStatus "github.com/supporterino/shelly_exporter/rpc/Shelly.GetStatus"
 )
 
-func RegisterSmartPlugS(device *devices.DeviceConfig, updateInterval time.Duration) {
+func RegisterDevice(device *DeviceConfig, updateInterval time.Duration) {
 	slog.Info("Registering Prometheus metrics")
 
-	// Register all metrics with Prometheus
-	prometheus.MustRegister(
-		inputStateGauge,
-		switchOutputGauge,
-		switchAPowerGauge,
-		switchVoltageGauge,
-		switchAEnergyTotalGauge,
-		switchTemperatureCGauge,
-		sysUptimeGauge,
-		sysRAMFreeGauge,
-		sysFSFreeGauge,
-		wifiRSSIGauge,
-		ethIPGauge,
-	)
-
-	RegisterConfigMetrics()
+	ShellyGetConfig.RegisterShelly_GetConfigMetrics()
+	ShellyGetStatus.RegisterShelly_GetStatusMetrics()
+	ShellyGetDeviceInfo.RegisterShelly_GetDeviceInfoMetrics()
 
 	apiClient := client.NewAPIClient(device.Host, 10*time.Second)
 
@@ -48,37 +36,21 @@ func RegisterSmartPlugS(device *devices.DeviceConfig, updateInterval time.Durati
 func fetchAndUpdateMetrics(apiClient *client.APIClient) error {
 	slog.Info("Fetching and updating metrics")
 
-	err := fetchAndUpdateDeviceInfo(apiClient)
+	err := ShellyGetDeviceInfo.UpdateShelly_GetDeviceInfoMetrics(apiClient)
 	if err != nil {
 		return fmt.Errorf("failed to update information metrics: %w", err)
 	}
 
-	err = fetchAndUpdateConfigMetrics(apiClient)
+	err = ShellyGetConfig.UpdateShelly_GetConfigMetrics(apiClient)
 	if err != nil {
 		return fmt.Errorf("failed to update config metrics: %w", err)
 	}
 
-	err = fetchAndUpdateStatusMetrics(apiClient)
+	err = ShellyGetStatus.UpdateShelly_StatusMetrics(apiClient)
 	if err != nil {
 		return fmt.Errorf("failed to update status metrics: %w", err)
 	}
 
 	slog.Info("Successfully updated metrics")
 	return nil
-}
-
-// boolToFloat64 converts a boolean value to float64 (1 for true, 0 for false).
-func boolToFloat64(b bool) float64 {
-	if b {
-		return 1
-	}
-	return 0
-}
-
-// coalesce returns the first non-nil string or a default value.
-func coalesce(s *string, defaultVal string) string {
-	if s != nil {
-		return *s
-	}
-	return defaultVal
 }

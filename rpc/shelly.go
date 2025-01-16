@@ -1,4 +1,4 @@
-package devices
+package rpc
 
 type DeviceConfig struct {
 	Host     string
