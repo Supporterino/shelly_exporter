@@ -1,6 +1,6 @@
-# shelly_exporter
+# shelly-exporter
 
-![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.2](https://img.shields.io/badge/AppVersion-0.1.2-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.2](https://img.shields.io/badge/AppVersion-0.1.2-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -87,10 +87,10 @@ helm install my-shelly_exporter shelly_exporter/shelly_exporter -f values.yaml
 | serviceMonitor.scrapeTimeout | string | `"30s"` | Timeout for scraping metrics |
 | serviceMonitor.targetLabels | list | `[]` | Target labels to add to the scraped metrics |
 | serviceMonitor.tlsConfig | object | `{}` | TLS configuration for scraping metrics |
-| shelly_exporter.debug | bool | `false` | Enable or disable debug mode for the Shelly Exporter. |
-| shelly_exporter.devices | list | `[{"host":"1.2.3.4"}]` | List of Shelly devices to monitor. |
-| shelly_exporter.devices[0] | object | `{"host":"1.2.3.4"}` | IP address of the Shelly device. |
-| shelly_exporter.updateInterval | int | `30` | Interval (in seconds) at which the exporter updates device data. |
+| shelly-exporter.debug | bool | `false` | Enable or disable debug mode for the Shelly Exporter. |
+| shelly-exporter.devices | list | `[{"host":"1.2.3.4"}]` | List of Shelly devices to monitor. |
+| shelly-exporter.devices[0] | object | `{"host":"1.2.3.4"}` | IP address of the Shelly device. |
+| shelly-exporter.updateInterval | int | `30` | Interval (in seconds) at which the exporter updates device data. |
 | tolerations | list | `[]` |  |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |
