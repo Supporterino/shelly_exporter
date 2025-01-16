@@ -7,10 +7,10 @@ metadata:
 data:
     k8s-config.yaml: |
         listenAddress: :{{ .Values.service.port }}
-        debug: {{ .Values.shelly-exporter.debug }}
-        deviceUpdateInterval: {{ .Values.shelly-exporter.updateInterval }}
+        debug: {{ .Values.shellyexporter.debug }}
+        deviceUpdateInterval: {{ .Values.shellyexporter.updateInterval }}
         devices:
-        {{- range .Values.shelly-exporter.devices }}
+        {{- range .Values.shellyexporter.devices }}
         - host: {{ .host }}
         {{- if .username }}
           username: {{ .username }}
