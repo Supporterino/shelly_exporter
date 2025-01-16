@@ -15,7 +15,6 @@ func RegisterSmartPlugS(device *devices.DeviceConfig, updateInterval time.Durati
 
 	// Register all metrics with Prometheus
 	prometheus.MustRegister(
-		apiCounter,
 		inputStateGauge,
 		switchOutputGauge,
 		switchAPowerGauge,

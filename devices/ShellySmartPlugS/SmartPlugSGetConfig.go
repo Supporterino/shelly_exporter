@@ -7,90 +7,104 @@ import (
 	"github.com/supporterino/shelly_exporter/client"
 )
 
-var (
-	apiCounter = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "api_requests_total",
-			Help: "Total number of API requests made.",
-		},
-		[]string{"device_name", "device_mac"}, // Labels for device context
+type Metrics struct {
+	BLEEnabled           *prometheus.GaugeVec
+	CloudEnabled         *prometheus.GaugeVec
+	CloudServer          *prometheus.GaugeVec
+	EthEnabled           *prometheus.GaugeVec
+	EthIPv4Mode          *prometheus.GaugeVec
+	InputStates          *prometheus.GaugeVec
+	SwitchStates         *prometheus.GaugeVec
+	SwitchAutoOnDelays   *prometheus.GaugeVec
+	SwitchAutoOffDelays  *prometheus.GaugeVec
+	SwitchPowerLimits    *prometheus.GaugeVec
+	DeviceInfo           *prometheus.GaugeVec
+	WifiAPEnabled        *prometheus.GaugeVec
+	WifiSTAEnabled       *prometheus.GaugeVec
+	WifiRoamingThreshold *prometheus.GaugeVec
+}
+
+// RegisterMetrics initializes and registers the Prometheus metrics
+func RegisterMetrics() *Metrics {
+	m := &Metrics{
+		BLEEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "ble_enabled",
+			Help: "Indicates if BLE is enabled (1 for true, 0 for false)",
+		}, []string{"device_mac"}),
+		CloudEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "cloud_enabled",
+			Help: "Indicates if Cloud is enabled (1 for true, 0 for false)",
+		}, []string{"device_mac"}),
+		CloudServer: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "cloud_server_info",
+			Help: "Cloud server configuration (labels include server address)",
+		}, []string{"device_mac", "server"}),
+		EthEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "eth_enabled",
+			Help: "Indicates if Ethernet is enabled (1 for true, 0 for false)",
+		}, []string{"device_mac"}),
+		EthIPv4Mode: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "eth_ipv4_mode",
+			Help: "Ethernet IPv4 mode (labels include mode)",
+		}, []string{"device_mac", "mode"}),
+		InputStates: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "input_state",
+			Help: "State of inputs (labels include input ID and type)",
+		}, []string{"device_mac", "input_id", "type"}),
+		SwitchStates: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "switch_state",
+			Help: "State of switches (labels include switch ID)",
+		}, []string{"device_mac", "switch_id"}),
+		SwitchAutoOnDelays: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "switch_auto_on_delay",
+			Help: "Auto-on delay for switches (in seconds)",
+		}, []string{"device_mac", "switch_id"}),
+		SwitchAutoOffDelays: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "switch_auto_off_delay",
+			Help: "Auto-off delay for switches (in seconds)",
+		}, []string{"device_mac", "switch_id"}),
+		SwitchPowerLimits: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "switch_power_limit",
+			Help: "Power limit for switches (in watts)",
+		}, []string{"device_mac", "switch_id"}),
+		DeviceInfo: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "device_info",
+			Help: "Device information (labels include device name, MAC, and firmware ID)",
+		}, []string{"device_mac", "name", "fw_id"}),
+		WifiAPEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "wifi_ap_enabled",
+			Help: "Indicates if Wi-Fi AP is enabled (1 for true, 0 for false)",
+		}, []string{"device_mac"}),
+		WifiSTAEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "wifi_sta_enabled",
+			Help: "Indicates if Wi-Fi STA is enabled (1 for true, 0 for false)",
+		}, []string{"device_mac"}),
+		WifiRoamingThreshold: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "wifi_roaming_rssi_threshold",
+			Help: "RSSI threshold for Wi-Fi roaming",
+		}, []string{"device_mac"}),
+	}
+
+	// Register all metrics with Prometheus
+	prometheus.MustRegister(
+		m.BLEEnabled,
+		m.CloudEnabled,
+		m.CloudServer,
+		m.EthEnabled,
+		m.EthIPv4Mode,
+		m.InputStates,
+		m.SwitchStates,
+		m.SwitchAutoOnDelays,
+		m.SwitchAutoOffDelays,
+		m.SwitchPowerLimits,
+		m.DeviceInfo,
+		m.WifiAPEnabled,
+		m.WifiSTAEnabled,
+		m.WifiRoamingThreshold,
 	)
 
-	// BLE Metrics
-	bleEnabledGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_ble_enabled",
-		Help: "Indicates if BLE is enabled.",
-	}, []string{"device_name", "device_mac"})
-
-	bleRPCEnabledGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_ble_rpc_enabled",
-		Help: "Indicates if BLE RPC is enabled.",
-	}, []string{"device_name", "device_mac"})
-
-	bleObserverEnabledGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_ble_observer_enabled",
-		Help: "Indicates if BLE Observer is enabled.",
-	}, []string{"device_name", "device_mac"})
-
-	// MQTT Metrics
-	mqttEnabledGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_mqtt_enabled",
-		Help: "Indicates if MQTT is enabled.",
-	}, []string{"device_name", "device_mac", "server"})
-	mqttRPCNotificationsGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_mqtt_rpc_notifications",
-		Help: "Indicates if MQTT RPC notifications are enabled.",
-	}, []string{"device_name", "device_mac", "server"})
-	mqttStatusNotificationsGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_mqtt_status_notifications",
-		Help: "Indicates if MQTT status notifications are enabled.",
-	}, []string{"device_name", "device_mac", "server"})
-
-	// Cloud Metrics
-	cloudEnabledGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_cloud_enabled",
-		Help: "Indicates if cloud is enabled.",
-	}, []string{"device_name", "device_mac"})
-
-	// Switch Metrics
-	switchAutoOnGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_switch_auto_on",
-		Help: "Indicates if auto-on is enabled for the switch.",
-	}, []string{"device_name", "device_mac", "switch_id", "switch_name"})
-
-	switchPowerLimitGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_switch_power_limit",
-		Help: "Power limit of the switch in watts.",
-	}, []string{"device_name", "device_mac", "switch_id", "switch_name"})
-
-	switchAutoOnDelayGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_switch_auto_on_delay",
-		Help: "Auto-on delay for the switch in seconds.",
-	}, []string{"device_name", "device_mac", "switch_id", "switch_name"})
-	switchVoltageLimitGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_switch_voltage_limit",
-		Help: "Voltage limit of the switch in volts.",
-	}, []string{"device_name", "device_mac", "switch_id", "switch_name"})
-	switchCurrentLimitGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_switch_current_limit",
-		Help: "Current limit of the switch in amperes.",
-	}, []string{"device_name", "device_mac", "switch_id", "switch_name"})
-
-	// WiFi Metrics
-	wifiAPEnabledGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_wifi_ap_enabled",
-		Help: "Indicates if WiFi AP mode is enabled.",
-	}, []string{"device_name", "device_mac", "wifi_ssid"})
-
-	wifiSTAEnabledGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_wifi_sta_enabled",
-		Help: "Indicates if WiFi STA mode is enabled.",
-	}, []string{"device_name", "device_mac", "wifi_ssid"})
-	wifiRSSIThresholdGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shelly_wifi_rssi_threshold",
-		Help: "RSSI threshold for WiFi roaming.",
-	}, []string{"device_name", "device_mac", "wifi_ssid"})
-)
+	return m
+}
 
 func fetchAndUpdateConfigMetrics(apiClient *client.APIClient) error {
 	var config client.ShellyGetConfigResponse
@@ -98,60 +112,76 @@ func fetchAndUpdateConfigMetrics(apiClient *client.APIClient) error {
 	if err != nil {
 		return fmt.Errorf("error fetching config: %w", err)
 	}
+	metrics := RegisterMetrics()
 
-	updateConfigMetrics(config)
+	metrics.UpdateMetrics(config)
+
 	return nil
 }
 
-func updateConfigMetrics(config client.ShellyGetConfigResponse) {
-	labels := map[string]string{
-		"device_name": config.Sys.Device.Name,
-		"device_mac":  config.Sys.Device.MAC,
+// UpdateMetrics populates the metrics from the config structure
+func (m *Metrics) UpdateMetrics(config client.ShellyGetConfigResponse) {
+	// BLE
+	if config.BLE.Enable {
+		m.BLEEnabled.WithLabelValues(config.Sys.Device.MAC).Set(1)
+	} else {
+		m.BLEEnabled.WithLabelValues(config.Sys.Device.MAC).Set(0)
 	}
 
-	// Update API Counter
-	apiCounter.With(labels).Inc()
+	// Cloud
+	if config.Cloud.Enable {
+		m.CloudEnabled.WithLabelValues(config.Sys.Device.MAC).Set(1)
+	} else {
+		m.CloudEnabled.WithLabelValues(config.Sys.Device.MAC).Set(0)
+	}
+	m.CloudServer.WithLabelValues(config.Sys.Device.MAC, config.Cloud.Server).Set(1)
 
-	// Update BLE Metrics
-	bleEnabledGauge.With(labels).Set(boolToFloat64(config.BLE.Enable))
-	bleRPCEnabledGauge.With(labels).Set(boolToFloat64(config.BLE.RPC.Enable))
-	bleObserverEnabledGauge.With(labels).Set(boolToFloat64(config.BLE.Observer.Enable))
+	// Ethernet
+	if config.Eth.Enable {
+		m.EthEnabled.WithLabelValues(config.Sys.Device.MAC).Set(1)
+	} else {
+		m.EthEnabled.WithLabelValues(config.Sys.Device.MAC).Set(0)
+	}
+	m.EthIPv4Mode.WithLabelValues(config.Sys.Device.MAC, config.Eth.IPv4Mode).Set(1)
 
-	// Update Cloud Metrics
-	cloudEnabledGauge.With(labels).Set(boolToFloat64(config.Cloud.Enable))
-
-	// Update MQTT Metrics
-	mqttLabels := map[string]string{
-		"device_name": config.Sys.Device.Name,
-		"device_mac":  config.Sys.Device.MAC,
-		"server":      config.MQTT.Server,
+	// Inputs
+	for id, input := range config.Inputs {
+		state := 0.0
+		if input.Invert {
+			state = 1.0
+		}
+		m.InputStates.WithLabelValues(config.Sys.Device.MAC, id, input.Type).Set(state)
 	}
 
-	mqttEnabledGauge.With(mqttLabels).Set(boolToFloat64(config.MQTT.Enable))
-	mqttRPCNotificationsGauge.With(mqttLabels).Set(boolToFloat64(config.MQTT.RPCNotifications))
-	mqttStatusNotificationsGauge.With(mqttLabels).Set(boolToFloat64(config.MQTT.StatusNotifications))
-
-	// Update Switch Metrics
-	switchLabels := map[string]string{
-		"device_name": config.Sys.Device.Name,
-		"device_mac":  config.Sys.Device.MAC,
-		"switch_id":   "switch:0",
-		"switch_name": fmt.Sprintf("%v", config.Switch0.Name), // Convert nil to string if necessary
+	// Switches
+	for id, sw := range config.Switches {
+		state := 0.0
+		if sw.AutoOn {
+			state = 1.0
+		}
+		m.SwitchStates.WithLabelValues(config.Sys.Device.MAC, id).Set(state)
+		m.SwitchAutoOnDelays.WithLabelValues(config.Sys.Device.MAC, id).Set(float64(sw.AutoOnDelay))
+		m.SwitchAutoOffDelays.WithLabelValues(config.Sys.Device.MAC, id).Set(float64(sw.AutoOffDelay))
+		m.SwitchPowerLimits.WithLabelValues(config.Sys.Device.MAC, id).Set(float64(sw.PowerLimit))
 	}
-	switchAutoOnGauge.With(switchLabels).Set(boolToFloat64(config.Switch0.AutoOn))
-	switchPowerLimitGauge.With(switchLabels).Set(float64(config.Switch0.PowerLimit))
-	switchAutoOnGauge.With(switchLabels).Set(boolToFloat64(config.Switch0.AutoOn))
-	switchAutoOnDelayGauge.With(switchLabels).Set(config.Switch0.AutoOnDelay)
-	switchVoltageLimitGauge.With(switchLabels).Set(float64(config.Switch0.VoltageLimit))
-	switchCurrentLimitGauge.With(switchLabels).Set(config.Switch0.CurrentLimit)
 
-	// Update WiFi Metrics
-	wifiLabels := map[string]string{
-		"device_name": config.Sys.Device.Name,
-		"device_mac":  config.Sys.Device.MAC,
-		"wifi_ssid":   config.WiFi.STA.SSID,
+	// System Info
+	m.DeviceInfo.WithLabelValues(
+		config.Sys.Device.MAC,
+		*config.Sys.Device.Name,
+		config.Sys.Device.FWID,
+	).Set(1)
+
+	// Wi-Fi
+	if config.Wifi.AP.Enable {
+		m.WifiAPEnabled.WithLabelValues(config.Sys.Device.MAC).Set(1)
+	} else {
+		m.WifiAPEnabled.WithLabelValues(config.Sys.Device.MAC).Set(0)
 	}
-	wifiAPEnabledGauge.With(wifiLabels).Set(boolToFloat64(config.WiFi.AP.Enable))
-	wifiSTAEnabledGauge.With(wifiLabels).Set(boolToFloat64(config.WiFi.STA.Enable))
-	wifiRSSIThresholdGauge.With(wifiLabels).Set(float64(config.WiFi.Roam.RSSIThreshold))
+	if config.Wifi.STA.Enable {
+		m.WifiSTAEnabled.WithLabelValues(config.Sys.Device.MAC).Set(1)
+	} else {
+		m.WifiSTAEnabled.WithLabelValues(config.Sys.Device.MAC).Set(0)
+	}
+	m.WifiRoamingThreshold.WithLabelValues(config.Sys.Device.MAC).Set(float64(config.Wifi.Roam.RSSIThreshold))
 }
