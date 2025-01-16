@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:  
+  release:
+    # depending on default permission settings for your org (contents being read-only or read-write for workloads), you will have to add permissions
+    # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "shelly_exporter-bot"
+          git config --global user.email "shelly_exporter-bot"
+
+      - name: Install Helm
+        uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 # v4
+        env:
+          GITHUB_TOKEN: "${{ secrets.TOKEN }}"
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
+        env:
+          CR_TOKEN: "${{ secrets.TOKEN }}"
+        with:
+          config: .github/cr.yaml
