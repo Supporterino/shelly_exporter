@@ -35,7 +35,16 @@ func main() {
 	// Register custom metrics
 	metrics.Register(cfg)
 
-	// Expose metrics endpoint
+	// Expose endpoints
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+             <head><title>Shelly Exporter</title></head>
+             <body>
+             <h1>Haproxy Exporter</h1>
+             <p><a href=/metrics>Metrics</a></p>
+             </body>
+             </html>`))
+	})
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/health", healthHandler)
 
