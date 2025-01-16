@@ -1,4 +1,4 @@
-name: Release
+name: Chart Release
 
 on:
   push:
