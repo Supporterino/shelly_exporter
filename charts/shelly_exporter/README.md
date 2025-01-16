@@ -56,14 +56,14 @@ helm install my-shelly_exporter shelly_exporter/shelly_exporter -f values.yaml
 | image.repository | string | `"ghcr.io/supporterino/shelly_exporter"` |  |
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` | This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
-| livenessProbe.httpGet.path | string | `"/"` |  |
+| livenessProbe.httpGet.path | string | `"/health"` |  |
 | livenessProbe.httpGet.port | string | `"http"` |  |
 | nameOverride | string | `""` | This is to override the chart name. |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` |  |
 | podLabels | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
-| readinessProbe.httpGet.path | string | `"/"` |  |
+| readinessProbe.httpGet.path | string | `"/health"` |  |
 | readinessProbe.httpGet.port | string | `"http"` |  |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
