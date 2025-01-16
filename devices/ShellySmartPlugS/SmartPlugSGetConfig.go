@@ -24,9 +24,11 @@ type Metrics struct {
 	WifiRoamingThreshold *prometheus.GaugeVec
 }
 
+var metrics *Metrics
+
 // RegisterMetrics initializes and registers the Prometheus metrics
-func RegisterMetrics() *Metrics {
-	m := &Metrics{
+func RegisterConfigMetrics() {
+	metrics = &Metrics{
 		BLEEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "ble_enabled",
 			Help: "Indicates if BLE is enabled (1 for true, 0 for false)",
@@ -87,23 +89,21 @@ func RegisterMetrics() *Metrics {
 
 	// Register all metrics with Prometheus
 	prometheus.MustRegister(
-		m.BLEEnabled,
-		m.CloudEnabled,
-		m.CloudServer,
-		m.EthEnabled,
-		m.EthIPv4Mode,
-		m.InputStates,
-		m.SwitchStates,
-		m.SwitchAutoOnDelays,
-		m.SwitchAutoOffDelays,
-		m.SwitchPowerLimits,
-		m.DeviceInfo,
-		m.WifiAPEnabled,
-		m.WifiSTAEnabled,
-		m.WifiRoamingThreshold,
+		metrics.BLEEnabled,
+		metrics.CloudEnabled,
+		metrics.CloudServer,
+		metrics.EthEnabled,
+		metrics.EthIPv4Mode,
+		metrics.InputStates,
+		metrics.SwitchStates,
+		metrics.SwitchAutoOnDelays,
+		metrics.SwitchAutoOffDelays,
+		metrics.SwitchPowerLimits,
+		metrics.DeviceInfo,
+		metrics.WifiAPEnabled,
+		metrics.WifiSTAEnabled,
+		metrics.WifiRoamingThreshold,
 	)
-
-	return m
 }
 
 func fetchAndUpdateConfigMetrics(apiClient *client.APIClient) error {
@@ -112,7 +112,6 @@ func fetchAndUpdateConfigMetrics(apiClient *client.APIClient) error {
 	if err != nil {
 		return fmt.Errorf("error fetching config: %w", err)
 	}
-	metrics := RegisterMetrics()
 
 	metrics.UpdateMetrics(config)
 

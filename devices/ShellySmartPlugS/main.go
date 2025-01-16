@@ -28,16 +28,18 @@ func RegisterSmartPlugS(device *devices.DeviceConfig, updateInterval time.Durati
 		ethIPGauge,
 	)
 
+	RegisterConfigMetrics()
+
 	apiClient := client.NewAPIClient(device.Host, 10*time.Second)
 
 	// Start fetching metrics periodically
 	go func() {
 		for {
+			time.Sleep(updateInterval * time.Second) // Adjust interval as needed
 			err := fetchAndUpdateMetrics(apiClient)
 			if err != nil {
 				slog.Error("Error fetching metrics", slog.Any("error", err))
 			}
-			time.Sleep(updateInterval * time.Second) // Adjust interval as needed
 		}
 	}()
 }
