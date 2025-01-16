@@ -3,12 +3,12 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "shelly_exporter.fullname" . }}
+  name: {{ include "shelly-exporter.fullname" . }}
   {{- if .Values.serviceMonitor.namespace }}
   namespace: {{ tpl .Values.serviceMonitor.namespace . }}
   {{- end }}
   labels:
-    {{- include "shelly_exporter.labels" . | nindent 4 }}
+    {{- include "shelly-exporter.labels" . | nindent 4 }}
     {{- with .Values.serviceMonitor.labels }}
     {{- tpl (toYaml . | nindent 4) $ }}
     {{- end }}
@@ -39,7 +39,7 @@ spec:
   jobLabel: "{{ .Release.Name }}"
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "shelly_exporter.name" . }}
+      app.kubernetes.io/name: {{ include "shelly-exporter.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   {{- with .Values.serviceMonitor.targetLabels }}
   targetLabels:

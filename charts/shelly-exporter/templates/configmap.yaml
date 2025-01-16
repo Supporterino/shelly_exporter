@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "shelly_exporter.fullname" . }}
+  name: {{ include "shelly-exporter.fullname" . }}
   labels:
-    {{- include "shelly_exporter.labels" . | nindent 4 }}
+    {{- include "shelly-exporter.labels" . | nindent 4 }}
 data:
     k8s-config.yaml: |
         listenAddress: :{{ .Values.service.port }}
-        debug: {{ .Values.shelly_exporter.debug }}
-        deviceUpdateInterval: {{ .Values.shelly_exporter.updateInterval }}
+        debug: {{ .Values.shelly-exporter.debug }}
+        deviceUpdateInterval: {{ .Values.shelly-exporter.updateInterval }}
         devices:
-        {{- range .Values.shelly_exporter.devices }}
+        {{- range .Values.shelly-exporter.devices }}
         - host: {{ .host }}
         {{- if .username }}
           username: {{ .username }}

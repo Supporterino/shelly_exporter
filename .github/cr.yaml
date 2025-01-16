@@ -1,2 +1,2 @@
-owner: shelly_exporter
+owner: shelly-exporter
 release-name-template: "{{ .Name }}-{{ .Version }}"

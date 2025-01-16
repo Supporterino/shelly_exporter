@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "shelly_exporter.fullname" . }}
+  name: {{ include "shelly-exporter.fullname" . }}
   labels:
-    {{- include "shelly_exporter.labels" . | nindent 4 }}
+    {{- include "shelly-exporter.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "shelly_exporter.selectorLabels" . | nindent 4 }}
+    {{- include "shelly-exporter.selectorLabels" . | nindent 4 }}

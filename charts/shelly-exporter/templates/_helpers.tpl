@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "shelly_exporter.name" -}}
+{{- define "shelly-exporter.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "shelly_exporter.fullname" -}}
+{{- define "shelly-exporter.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "shelly_exporter.chart" -}}
+{{- define "shelly-exporter.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "shelly_exporter.labels" -}}
-helm.sh/chart: {{ include "shelly_exporter.chart" . }}
-{{ include "shelly_exporter.selectorLabels" . }}
+{{- define "shelly-exporter.labels" -}}
+helm.sh/chart: {{ include "shelly-exporter.chart" . }}
+{{ include "shelly-exporter.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +45,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "shelly_exporter.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "shelly_exporter.name" . }}
+{{- define "shelly-exporter.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "shelly-exporter.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "shelly_exporter.serviceAccountName" -}}
+{{- define "shelly-exporter.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "shelly_exporter.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "shelly-exporter.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

@@ -12,7 +12,7 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-shelly_exporter:
+shelly-exporter:
   # -- Enable or disable debug mode for the Shelly Exporter.
   debug: false
   # -- Interval (in seconds) at which the exporter updates device data.
