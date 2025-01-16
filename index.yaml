@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  shelly_exporter:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2025-01-16T14:39:49.295016264Z"
+    description: A Helm chart for Kubernetes
+    digest: bb25a015250f023ccbabb658ffb8ab1d1c3dd397b3854ef0bd02e5ea1bae853f
+    name: shelly_exporter
+    type: application
+    urls:
+    - https://github.com/Supporterino/shelly_exporter/releases/download/shelly_exporter-0.1.0/shelly_exporter-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-01-16T14:39:49.295029468Z"
