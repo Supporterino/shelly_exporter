@@ -34,7 +34,7 @@ func RegisterShelly_GetDeviceInfoMetrics() {
 
 func UpdateShelly_GetDeviceInfoMetrics(apiClient *client.APIClient) error {
 	var info client.ShellyGetDeviceInfoResponse
-	err := apiClient.FetchData("/rpc/Shelly.GetConfig", &info)
+	err := apiClient.FetchData("/rpc/Shelly.GetDeviceInfo", &info)
 	if err != nil {
 		return fmt.Errorf("error fetching config: %w", err)
 	}
