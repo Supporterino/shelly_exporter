@@ -2,7 +2,11 @@ version: 2
 
 git:
   ignore_tags:
-    - shelly-exporter-*
+    - shelly-exporter-0.2.0
+    - shelly-exporter-0.2.1
+    - shelly-exporter-0.2.2
+    - shelly-exporter-0.2.3
+    - shelly-exporter-0.2.4
 
 before:
   hooks:
