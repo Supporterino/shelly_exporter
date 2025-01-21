@@ -14,10 +14,6 @@ import (
 func RegisterDevice(device *DeviceConfig, updateInterval time.Duration) {
 	slog.Info("Registering Prometheus metrics")
 
-	ShellyGetConfig.RegisterShelly_GetConfigMetrics()
-	ShellyGetStatus.RegisterShelly_GetStatusMetrics()
-	ShellyGetDeviceInfo.RegisterShelly_GetDeviceInfoMetrics()
-
 	apiClient := client.NewAPIClient(device.Host, 10*time.Second)
 
 	// Start fetching metrics periodically

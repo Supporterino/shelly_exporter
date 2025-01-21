@@ -7,6 +7,7 @@ git:
     - shelly-exporter-0.2.2
     - shelly-exporter-0.2.3
     - shelly-exporter-0.2.4
+    - shelly-exporter-0.2.5
 
 before:
   hooks:
