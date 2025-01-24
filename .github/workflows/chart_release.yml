@@ -39,9 +39,9 @@ jobs:
         uses: appany/helm-oci-chart-releaser@v0.4.2
         with:
           name: shelly-exporter
-          repository: supporterino/shelly_exporter
+          repository: supporterino
           tag: ${{ steps.read-chart-version.outputs.chart_version }}
           registry: ghcr.io
           registry_username: ${{ github.repository_owner }}
-          registry_password: ${{ github.token }}
+          registry_password: ${{ secrets.TOKEN }}
           update_dependencies: 'true' # Defaults to false
