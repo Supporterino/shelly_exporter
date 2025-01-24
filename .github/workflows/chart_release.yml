@@ -22,19 +22,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure Git
+      - name: Install yq
         run: |
-          git config --global user.name "shelly_exporter-bot"
-          git config --global user.email "shelly_exporter-bot"
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
 
-      - name: Install Helm
-        uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 # v4
-        env:
-          GITHUB_TOKEN: "${{ secrets.TOKEN }}"
+      # Extract the chart version from Chart.yaml
+      - name: Read Chart Version
+        id: read-chart-version
+        run: |
+          version=$(yq '.version' < charts/shelly-exporter/Chart.yaml)
+          echo "chart_version=$version" >> $GITHUB_OUTPUT
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
-        env:
-          CR_TOKEN: "${{ secrets.TOKEN }}"
+      - name: Chart | Push
+        uses: appany/helm-oci-chart-releaser@v0.4.2
         with:
-          config: .github/cr.yaml
+          name: shelly-exporter
+          repository: supporterino
+          tag: ${{ steps.read-chart-version.outputs.chart_version }}
+          registry: ghcr.io
+          registry_username: ${{ github.repository_owner }}
+          registry_password: ${{ github.token }}
+          update_dependencies: 'true' # Defaults to false
