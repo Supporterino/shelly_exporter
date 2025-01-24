@@ -33,7 +33,7 @@ func main() {
 	slog.SetDefault(logger)
 
 	// Register custom metrics
-	metrics.Register(cfg)
+	metrics.Register(cfg, &cfgPath)
 
 	// Expose endpoints
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

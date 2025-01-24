@@ -9,13 +9,15 @@ import (
 )
 
 // Register initializes Prometheus metrics and starts periodic API fetching.
-func Register(cfg *config.YamlConfig) {
+func Register(cfg *config.YamlConfig, cfgPath *string) {
 	ShellyGetConfig.RegisterShelly_GetConfigMetrics()
 	ShellyGetStatus.RegisterShelly_GetStatusMetrics()
 	ShellyGetDeviceInfo.RegisterShelly_GetDeviceInfoMetrics()
 
+	dm := rpc.NewDeviceManager()
+
 	for _, device := range cfg.Devices {
-		rpc.RegisterDevice(&rpc.DeviceConfig{
+		dm.RegisterDevice(&rpc.DeviceConfig{
 			Host:     device.Host,
 			Username: device.Username,
 			Password: device.Password,
