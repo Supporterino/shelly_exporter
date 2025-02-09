@@ -10,9 +10,9 @@ type CoverGetStatusResponse struct {
 	Pf      float64 `json:"pf"`
 	Freq    float64 `json:"freq"`
 	Aenergy struct {
-		Total    float64 `json:"total"`
-		ByMinute []int   `json:"by_minute"`
-		MinuteTs int     `json:"minute_ts"`
+		Total    float64   `json:"total"`
+		ByMinute []float64 `json:"by_minute"`
+		MinuteTs int       `json:"minute_ts"`
 	} `json:"aenergy"`
 	Temperature struct {
 		TC float64 `json:"tC"`

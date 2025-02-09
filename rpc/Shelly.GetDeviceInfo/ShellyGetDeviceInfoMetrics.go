@@ -8,8 +8,11 @@ import (
 )
 
 type GetDeviceInfoMetrics struct {
-	DeviceInfo  *prometheus.GaugeVec
-	AuthEnabled *prometheus.GaugeVec
+	DeviceInfo    *prometheus.GaugeVec
+	AuthEnabled   *prometheus.GaugeVec
+	DeviceModel   *string
+	DeviceProfile *string
+	DeviceMac     *string
 }
 
 var metrics *GetDeviceInfoMetrics
@@ -17,12 +20,16 @@ var metrics *GetDeviceInfoMetrics
 func RegisterShelly_GetDeviceInfoMetrics() {
 	metrics = &GetDeviceInfoMetrics{
 		DeviceInfo: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "device_info",
-			Help: "Static device information exposed as labels (model, firmware version, app).",
+			Namespace: "shelly",
+			Subsystem: "device",
+			Name:      "info",
+			Help:      "Static device information exposed as labels (model, firmware version, app).",
 		}, []string{"device_name", "device_id", "device_mac", "model", "fw_version", "app"}),
 		AuthEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "auth_enabled",
-			Help: "Indicates if authentication is enabled on the device.",
+			Namespace: "shelly",
+			Subsystem: "device",
+			Name:      "auth",
+			Help:      "Indicates if authentication is enabled on the device.",
 		}, []string{"device_mac"}),
 	}
 
@@ -45,8 +52,11 @@ func UpdateShelly_GetDeviceInfoMetrics(apiClient *client.APIClient) error {
 }
 
 func (m *GetDeviceInfoMetrics) UpdateMetrics(info client.ShellyGetDeviceInfoResponse) {
-	m.DeviceInfo.WithLabelValues(info.Name, info.ID, info.MAC, info.Model, info.FwID, info.App).Set(1)
-	m.AuthEnabled.WithLabelValues(info.MAC).Set(boolToFloat64(info.AuthEn))
+	m.DeviceInfo.WithLabelValues(info.Name, info.ID, info.Mac, info.Model, info.FwID, info.App).Set(1)
+	m.AuthEnabled.WithLabelValues(info.Mac).Set(boolToFloat64(info.AuthEn))
+	m.DeviceModel = &info.App
+	m.DeviceProfile = &info.Profile
+	m.DeviceMac = &info.Mac
 }
 
 func boolToFloat64(b bool) float64 {
@@ -54,4 +64,16 @@ func boolToFloat64(b bool) float64 {
 		return 1
 	}
 	return 0
+}
+
+func GetDeviceType() string {
+	return *metrics.DeviceModel
+}
+
+func GetDeviceProfile() string {
+	return *metrics.DeviceProfile
+}
+
+func GetDeviceMac() string {
+	return *metrics.DeviceMac
 }

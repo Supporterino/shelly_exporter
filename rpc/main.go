@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/supporterino/shelly_exporter/client"
-	ShellyGetConfig "github.com/supporterino/shelly_exporter/rpc/Shelly.GetConfig"
+	CoverGetStatus "github.com/supporterino/shelly_exporter/rpc/Cover.GetStatus"
 	ShellyGetDeviceInfo "github.com/supporterino/shelly_exporter/rpc/Shelly.GetDeviceInfo"
-	ShellyGetStatus "github.com/supporterino/shelly_exporter/rpc/Shelly.GetStatus"
 )
 
 // DeviceManager manages registered devices.
@@ -100,19 +99,30 @@ func fetchAndUpdateMetrics(apiClient *client.APIClient) error {
 
 	err := ShellyGetDeviceInfo.UpdateShelly_GetDeviceInfoMetrics(apiClient)
 	if err != nil {
-		return fmt.Errorf("failed to update information metrics: %w", err)
+		return fmt.Errorf("failed to update device information metrics: %w", err)
 	}
 
-	err = ShellyGetConfig.UpdateShelly_GetConfigMetrics(apiClient)
-	if err != nil {
-		return fmt.Errorf("failed to update config metrics: %w", err)
+	switch device_type := ShellyGetDeviceInfo.GetDeviceType(); device_type {
+	case "Plus2PM":
+		switch profile := ShellyGetDeviceInfo.GetDeviceProfile(); profile {
+		case "cover":
+			err := CoverGetStatus.UpdateCoverGetStatusMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+			if err != nil {
+				return fmt.Errorf("failed to update cover metrics: %w", err)
+			}
+		}
 	}
 
-	err = ShellyGetStatus.UpdateShelly_StatusMetrics(apiClient)
-	if err != nil {
-		return fmt.Errorf("failed to update status metrics: %w", err)
-	}
+	// err = ShellyGetConfig.UpdateShelly_GetConfigMetrics(apiClient)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to update config metrics: %w", err)
+	// }
 
-	slog.Info("Successfully updated metrics")
+	// err = ShellyGetStatus.UpdateShelly_StatusMetrics(apiClient)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to update status metrics: %w", err)
+	// }
+
+	// slog.Info("Successfully updated metrics")
 	return nil
 }

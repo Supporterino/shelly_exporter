@@ -81,7 +81,8 @@ func RegisterCoverGetStatusMetrics() {
 		Position: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "cover",
-			Name:      "Current position of the cover",
+			Name:      "position",
+			Help:      "Current position of the cover",
 		}, []string{"device_mac", "cover_id"}),
 	}
 
