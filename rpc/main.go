@@ -36,7 +36,7 @@ func (dm *DeviceManager) RegisterDevice(device *DeviceConfig, updateInterval tim
 		return
 	}
 
-	slog.Info("Registering Prometheus metrics", slog.String("host", device.Host))
+	slog.Info("Registering new device", slog.String("host", device.Host))
 
 	apiClient := client.NewAPIClient(device.Host, 10*time.Second)
 	ctx, cancel := context.WithCancel(context.Background())

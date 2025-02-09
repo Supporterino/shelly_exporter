@@ -3,6 +3,7 @@ package metrics
 import (
 	"github.com/supporterino/shelly_exporter/config"
 	"github.com/supporterino/shelly_exporter/rpc"
+	CoverGetStatus "github.com/supporterino/shelly_exporter/rpc/Cover.GetStatus"
 	ShellyGetConfig "github.com/supporterino/shelly_exporter/rpc/Shelly.GetConfig"
 	ShellyGetDeviceInfo "github.com/supporterino/shelly_exporter/rpc/Shelly.GetDeviceInfo"
 	ShellyGetStatus "github.com/supporterino/shelly_exporter/rpc/Shelly.GetStatus"
@@ -13,6 +14,8 @@ func Register(cfg *config.YamlConfig, cfgPath *string) {
 	ShellyGetConfig.RegisterShelly_GetConfigMetrics()
 	ShellyGetStatus.RegisterShelly_GetStatusMetrics()
 	ShellyGetDeviceInfo.RegisterShelly_GetDeviceInfoMetrics()
+
+	CoverGetStatus.RegisterCoverGetStatusMetrics()
 
 	dm := rpc.NewDeviceManager()
 
