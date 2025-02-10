@@ -19,25 +19,25 @@ var metrics *ShellyGetStatusMetrics
 func RegisterShellyGetStatusMetrics() {
 	metrics = &ShellyGetStatusMetrics{
 		Uptime: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "shely",
+			Namespace: "shelly",
 			Subsystem: "system",
 			Name:      "uptime",
 			Help:      "System uptime in seconds",
 		}, []string{"device_mac"}),
 		RAM: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "shely",
+			Namespace: "shelly",
 			Subsystem: "system",
 			Name:      "ram",
 			Help:      "RAM sizes free and used in bytes",
 		}, []string{"device_mac", "kind"}),
 		FS: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "shely",
+			Namespace: "shelly",
 			Subsystem: "system",
 			Name:      "fs",
 			Help:      "FS sizes free and used in bytes",
 		}, []string{"device_mac", "kind"}),
 		WIFIRSSI: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "shely",
+			Namespace: "shelly",
 			Subsystem: "system",
 			Name:      "wifi_rssi",
 			Help:      "Wi-Fi RSSI signal strength in dBm",

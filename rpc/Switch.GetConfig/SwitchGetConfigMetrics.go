@@ -22,7 +22,7 @@ var metrics *SwitchGetConfig
 func RegisterSwitchGetConfigMetrics() {
 	metrics = &SwitchGetConfig{
 		InitialState: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "shely",
+			Namespace: "shelly",
 			Subsystem: "switch",
 			Name:      "initial_state",
 			Help:      "Initial state of the switch after power loss",
