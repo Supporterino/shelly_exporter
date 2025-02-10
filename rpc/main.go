@@ -47,6 +47,8 @@ func (dm *DeviceManager) RegisterDevice(device *DeviceConfig, updateInterval tim
 	// Initialize device type
 	ShellyGetDeviceInfo.UpdateShellyGetDeviceInfoMetrics(apiClient)
 	device.Type = ShellyGetDeviceInfo.GetDeviceType()
+	device.Mac = ShellyGetDeviceInfo.GetDeviceMac()
+	device.Profile = ShellyGetDeviceInfo.GetDeviceProfile()
 
 	// Save the cancel function to stop the goroutine later.
 	dm.devices[device.Host] = cancel
@@ -62,7 +64,7 @@ func (dm *DeviceManager) RegisterDevice(device *DeviceConfig, updateInterval tim
 				slog.Info("Stopping metrics update loop", slog.String("host", device.Host))
 				return
 			case <-ticker.C:
-				err := fetchAndUpdateMetrics(apiClient, device.Type)
+				err := fetchAndUpdateMetrics(apiClient, device)
 				if err != nil {
 					slog.Error("Error fetching metrics", slog.Any("error", err), slog.String("host", device.Host))
 				}
@@ -102,7 +104,7 @@ func (dm *DeviceManager) DeregisterAll() {
 }
 
 // fetchAndUpdateMetrics fetches data from the API and updates Prometheus metrics.
-func fetchAndUpdateMetrics(apiClient *client.APIClient, device_type string) error {
+func fetchAndUpdateMetrics(apiClient *client.APIClient, device *DeviceConfig) error {
 	slog.Info("Fetching and updating metrics")
 
 	err := ShellyGetDeviceInfo.UpdateShellyGetDeviceInfoMetrics(apiClient)
@@ -120,32 +122,33 @@ func fetchAndUpdateMetrics(apiClient *client.APIClient, device_type string) erro
 		return fmt.Errorf("failed to update config metrics: %w", err)
 	}
 
-	slog.Debug("Device type:", slog.String("type", device_type))
+	slog.Debug("Device type:", slog.String("type", device.Type))
 
-	switch device_type {
+	switch device_type := device.Type; device_type {
 	case "Plus2PM":
-		switch profile := ShellyGetDeviceInfo.GetDeviceProfile(); profile {
+		slog.Debug("Device profile:", slog.String("profile", device.Profile))
+		switch profile := device.Profile; profile {
 		case "cover":
-			err := CoverGetStatus.UpdateCoverGetStatusMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+			err := CoverGetStatus.UpdateCoverGetStatusMetrics(apiClient, 0, device.Mac)
 			if err != nil {
 				return fmt.Errorf("failed to update cover metrics: %w", err)
 			}
 		}
 	case "PlusPlugS":
-		err := SwitchGetStatus.UpdateSwitchGetStatusMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+		err := SwitchGetStatus.UpdateSwitchGetStatusMetrics(apiClient, 0, device.Mac)
 		if err != nil {
 			return fmt.Errorf("failed to update switch status metrics: %w", err)
 		}
-		err = SwitchGetConfig.UpdateSwitchGetConfigMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+		err = SwitchGetConfig.UpdateSwitchGetConfigMetrics(apiClient, 0, device.Mac)
 		if err != nil {
 			return fmt.Errorf("failed to update switch conig metrics: %w", err)
 		}
 	case "Mini1G3":
-		err := SwitchGetStatus.UpdateSwitchGetStatusMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+		err := SwitchGetStatus.UpdateSwitchGetStatusMetrics(apiClient, 0, device.Mac)
 		if err != nil {
 			return fmt.Errorf("failed to update switch status metrics: %w", err)
 		}
-		err = SwitchGetConfig.UpdateSwitchGetConfigMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+		err = SwitchGetConfig.UpdateSwitchGetConfigMetrics(apiClient, 0, device.Mac)
 		if err != nil {
 			return fmt.Errorf("failed to update switch conig metrics: %w", err)
 		}

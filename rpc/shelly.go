@@ -5,4 +5,6 @@ type DeviceConfig struct {
 	Username string
 	Password string
 	Type     string
+	Mac      string
+	Profile  string
 }
