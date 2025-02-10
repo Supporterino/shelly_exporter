@@ -34,7 +34,7 @@ func RegisterCoverGetStatusMetrics() {
 			Namespace: "shelly",
 			Subsystem: "cover",
 			Name:      "power",
-			Help:      "Apparent power of the cover in Watts",
+			Help:      "Active power of the cover in Watts",
 		}, []string{"device_mac", "cover_id"}),
 		Voltage: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",

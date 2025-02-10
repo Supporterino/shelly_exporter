@@ -7,15 +7,18 @@ import (
 	ShellyGetConfig "github.com/supporterino/shelly_exporter/rpc/Shelly.GetConfig"
 	ShellyGetDeviceInfo "github.com/supporterino/shelly_exporter/rpc/Shelly.GetDeviceInfo"
 	ShellyGetStatus "github.com/supporterino/shelly_exporter/rpc/Shelly.GetStatus"
+	SwitchGetConfig "github.com/supporterino/shelly_exporter/rpc/Switch.GetConfig"
+	SwitchGetStatus "github.com/supporterino/shelly_exporter/rpc/Switch.GetStatus"
 )
 
 // Register initializes Prometheus metrics and starts periodic API fetching.
 func Register(cfg *config.YamlConfig, cfgPath *string) {
-	ShellyGetConfig.RegisterShelly_GetConfigMetrics()
-	ShellyGetStatus.RegisterShelly_GetStatusMetrics()
-	ShellyGetDeviceInfo.RegisterShelly_GetDeviceInfoMetrics()
-
+	ShellyGetConfig.RegisterShellyGetConfigMetrics()
+	ShellyGetStatus.RegisterShellyGetStatusMetrics()
+	ShellyGetDeviceInfo.RegisterShellyGetDeviceInfoMetrics()
 	CoverGetStatus.RegisterCoverGetStatusMetrics()
+	SwitchGetStatus.RegisterSwitchGetStatusMetrics()
+	SwitchGetConfig.RegisterSwitchGetConfigMetrics()
 
 	dm := rpc.NewDeviceManager()
 

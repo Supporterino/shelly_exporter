@@ -11,24 +11,6 @@ type Temperature struct {
 	TF float64 `json:"tF"`
 }
 
-type Switch struct {
-	ID             int         `json:"id"`
-	Source         string      `json:"source"`
-	Output         bool        `json:"output"`
-	TimerStartedAt float64     `json:"timer_started_at,omitempty"`
-	TimerDuration  int         `json:"timer_duration,omitempty"`
-	APower         float64     `json:"apower"`
-	Voltage        float64     `json:"voltage"`
-	Current        float64     `json:"current"`
-	AEnergy        Energy      `json:"aenergy"`
-	Temperature    Temperature `json:"temperature"`
-}
-
-type Input struct {
-	ID    int  `json:"id"`
-	State bool `json:"state"`
-}
-
 type Sys struct {
 	MAC              string `json:"mac"`
 	RestartRequired  bool   `json:"restart_required"`
@@ -59,13 +41,11 @@ type Wifi struct {
 }
 
 type ShellyGetStatusResponse struct {
-	BLE      map[string]interface{}   `json:"ble"`
-	Cloud    struct{ Connected bool } `json:"cloud"`
-	Eth      struct{ IP string }      `json:"eth"`
-	Inputs   map[string]Input
-	Switches map[string]Switch
-	MQTT     struct{ Connected bool } `json:"mqtt"`
-	Sys      Sys                      `json:"sys"`
-	Wifi     Wifi                     `json:"wifi"`
-	WS       struct{ Connected bool } `json:"ws"`
+	BLE   map[string]interface{}   `json:"ble"`
+	Cloud struct{ Connected bool } `json:"cloud"`
+	Eth   struct{ IP string }      `json:"eth"`
+	MQTT  struct{ Connected bool } `json:"mqtt"`
+	Sys   Sys                      `json:"sys"`
+	Wifi  Wifi                     `json:"wifi"`
+	WS    struct{ Connected bool } `json:"ws"`
 }

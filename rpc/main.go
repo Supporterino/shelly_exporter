@@ -9,7 +9,11 @@ import (
 
 	"github.com/supporterino/shelly_exporter/client"
 	CoverGetStatus "github.com/supporterino/shelly_exporter/rpc/Cover.GetStatus"
+	ShellyGetConfig "github.com/supporterino/shelly_exporter/rpc/Shelly.GetConfig"
 	ShellyGetDeviceInfo "github.com/supporterino/shelly_exporter/rpc/Shelly.GetDeviceInfo"
+	ShellyGetStatus "github.com/supporterino/shelly_exporter/rpc/Shelly.GetStatus"
+	SwitchGetConfig "github.com/supporterino/shelly_exporter/rpc/Switch.GetConfig"
+	SwitchGetStatus "github.com/supporterino/shelly_exporter/rpc/Switch.GetStatus"
 )
 
 // DeviceManager manages registered devices.
@@ -97,9 +101,19 @@ func (dm *DeviceManager) DeregisterAll() {
 func fetchAndUpdateMetrics(apiClient *client.APIClient) error {
 	slog.Info("Fetching and updating metrics")
 
-	err := ShellyGetDeviceInfo.UpdateShelly_GetDeviceInfoMetrics(apiClient)
+	err := ShellyGetDeviceInfo.UpdateShellyGetDeviceInfoMetrics(apiClient)
 	if err != nil {
 		return fmt.Errorf("failed to update device information metrics: %w", err)
+	}
+
+	err = ShellyGetStatus.UpdateShellyStatusMetrics(apiClient)
+	if err != nil {
+		return fmt.Errorf("failed to update device information metrics: %w", err)
+	}
+
+	err = ShellyGetConfig.UpdateShellyGetConfigMetrics(apiClient)
+	if err != nil {
+		return fmt.Errorf("failed to update config metrics: %w", err)
 	}
 
 	switch device_type := ShellyGetDeviceInfo.GetDeviceType(); device_type {
@@ -111,18 +125,26 @@ func fetchAndUpdateMetrics(apiClient *client.APIClient) error {
 				return fmt.Errorf("failed to update cover metrics: %w", err)
 			}
 		}
+	case "PlusPlugS":
+		err := SwitchGetStatus.UpdateSwitchGetStatusMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+		if err != nil {
+			return fmt.Errorf("failed to update switch status metrics: %w", err)
+		}
+		err = SwitchGetConfig.UpdateSwitchGetConfigMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+		if err != nil {
+			return fmt.Errorf("failed to update switch conig metrics: %w", err)
+		}
+	case "Mini1G3":
+		err := SwitchGetStatus.UpdateSwitchGetStatusMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+		if err != nil {
+			return fmt.Errorf("failed to update switch status metrics: %w", err)
+		}
+		err = SwitchGetConfig.UpdateSwitchGetConfigMetrics(apiClient, 0, ShellyGetDeviceInfo.GetDeviceMac())
+		if err != nil {
+			return fmt.Errorf("failed to update switch conig metrics: %w", err)
+		}
 	}
 
-	// err = ShellyGetConfig.UpdateShelly_GetConfigMetrics(apiClient)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to update config metrics: %w", err)
-	// }
-
-	// err = ShellyGetStatus.UpdateShelly_StatusMetrics(apiClient)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to update status metrics: %w", err)
-	// }
-
-	// slog.Info("Successfully updated metrics")
+	slog.Info("Successfully updated metrics")
 	return nil
 }

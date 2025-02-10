@@ -17,7 +17,7 @@ type GetDeviceInfoMetrics struct {
 
 var metrics *GetDeviceInfoMetrics
 
-func RegisterShelly_GetDeviceInfoMetrics() {
+func RegisterShellyGetDeviceInfoMetrics() {
 	metrics = &GetDeviceInfoMetrics{
 		DeviceInfo: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
@@ -39,7 +39,7 @@ func RegisterShelly_GetDeviceInfoMetrics() {
 	)
 }
 
-func UpdateShelly_GetDeviceInfoMetrics(apiClient *client.APIClient) error {
+func UpdateShellyGetDeviceInfoMetrics(apiClient *client.APIClient) error {
 	var info client.ShellyGetDeviceInfoResponse
 	err := apiClient.FetchData("/rpc/Shelly.GetDeviceInfo", &info)
 	if err != nil {
