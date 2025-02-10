@@ -44,6 +44,10 @@ func (dm *DeviceManager) RegisterDevice(device *DeviceConfig, updateInterval tim
 	apiClient := client.NewAPIClient(device.Host, 10*time.Second)
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Initialize device type
+	ShellyGetDeviceInfo.UpdateShellyGetDeviceInfoMetrics(apiClient)
+	device.Type = ShellyGetDeviceInfo.GetDeviceType()
+
 	// Save the cancel function to stop the goroutine later.
 	dm.devices[device.Host] = cancel
 
@@ -58,7 +62,7 @@ func (dm *DeviceManager) RegisterDevice(device *DeviceConfig, updateInterval tim
 				slog.Info("Stopping metrics update loop", slog.String("host", device.Host))
 				return
 			case <-ticker.C:
-				err := fetchAndUpdateMetrics(apiClient)
+				err := fetchAndUpdateMetrics(apiClient, device.Type)
 				if err != nil {
 					slog.Error("Error fetching metrics", slog.Any("error", err), slog.String("host", device.Host))
 				}
@@ -98,7 +102,7 @@ func (dm *DeviceManager) DeregisterAll() {
 }
 
 // fetchAndUpdateMetrics fetches data from the API and updates Prometheus metrics.
-func fetchAndUpdateMetrics(apiClient *client.APIClient) error {
+func fetchAndUpdateMetrics(apiClient *client.APIClient, device_type string) error {
 	slog.Info("Fetching and updating metrics")
 
 	err := ShellyGetDeviceInfo.UpdateShellyGetDeviceInfoMetrics(apiClient)
@@ -116,7 +120,7 @@ func fetchAndUpdateMetrics(apiClient *client.APIClient) error {
 		return fmt.Errorf("failed to update config metrics: %w", err)
 	}
 
-	switch device_type := ShellyGetDeviceInfo.GetDeviceType(); device_type {
+	switch device_type {
 	case "Plus2PM":
 		switch profile := ShellyGetDeviceInfo.GetDeviceProfile(); profile {
 		case "cover":
