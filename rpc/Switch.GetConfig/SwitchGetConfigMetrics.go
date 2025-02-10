@@ -7,7 +7,7 @@ import (
 	"github.com/supporterino/shelly_exporter/client"
 )
 
-type ConfigMetrics struct {
+type SwitchGetConfig struct {
 	InitialState         *prometheus.GaugeVec
 	AutoOn               *prometheus.GaugeVec
 	AutoOff              *prometheus.GaugeVec
@@ -17,10 +17,10 @@ type ConfigMetrics struct {
 	CurrentLimit         *prometheus.GaugeVec
 }
 
-var metrics *ConfigMetrics
+var metrics *SwitchGetConfig
 
 func RegisterSwitchGetConfigMetrics() {
-	metrics = &ConfigMetrics{
+	metrics = &SwitchGetConfig{
 		InitialState: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shely",
 			Subsystem: "switch",
@@ -88,7 +88,7 @@ func UpdateSwitchGetConfigMetrics(apiClient *client.APIClient, switchID int, dev
 	return nil
 }
 
-func (m *ConfigMetrics) UpdateMetrics(status client.SwitchGetConfigResponse, device_mac string) {
+func (m *SwitchGetConfig) UpdateMetrics(status client.SwitchGetConfigResponse, device_mac string) {
 	switchID := fmt.Sprintf("%d", status.ID)
 
 	switch state := status.InitialState; state {

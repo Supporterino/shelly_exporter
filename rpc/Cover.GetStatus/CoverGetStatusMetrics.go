@@ -7,7 +7,7 @@ import (
 	"github.com/supporterino/shelly_exporter/client"
 )
 
-type StatusMetrics struct {
+type CoverGetStatusMetrics struct {
 	State       *prometheus.GaugeVec
 	APower      *prometheus.GaugeVec
 	Voltage     *prometheus.GaugeVec
@@ -20,10 +20,10 @@ type StatusMetrics struct {
 	Position    *prometheus.GaugeVec
 }
 
-var metrics *StatusMetrics
+var metrics *CoverGetStatusMetrics
 
 func RegisterCoverGetStatusMetrics() {
-	metrics = &StatusMetrics{
+	metrics = &CoverGetStatusMetrics{
 		State: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "cover",
@@ -112,7 +112,7 @@ func UpdateCoverGetStatusMetrics(apiClient *client.APIClient, coverID int, devic
 	return nil
 }
 
-func (m *StatusMetrics) UpdateMetrics(status client.CoverGetStatusResponse, device_mac string) {
+func (m *CoverGetStatusMetrics) UpdateMetrics(status client.CoverGetStatusResponse, device_mac string) {
 	coverID := fmt.Sprintf("%d", status.ID)
 
 	switch state := status.State; state {

@@ -7,17 +7,17 @@ import (
 	"github.com/supporterino/shelly_exporter/client"
 )
 
-type StatusMetrics struct {
+type ShellyGetStatusMetrics struct {
 	Uptime   *prometheus.GaugeVec
 	RAM      *prometheus.GaugeVec
 	FS       *prometheus.GaugeVec
 	WIFIRSSI *prometheus.GaugeVec
 }
 
-var metrics *StatusMetrics
+var metrics *ShellyGetStatusMetrics
 
 func RegisterShellyGetStatusMetrics() {
-	metrics = &StatusMetrics{
+	metrics = &ShellyGetStatusMetrics{
 		Uptime: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shely",
 			Subsystem: "system",
@@ -64,7 +64,7 @@ func UpdateShellyStatusMetrics(apiClient *client.APIClient) error {
 	return nil
 }
 
-func (m *StatusMetrics) UpdateMetrics(status client.ShellyGetStatusResponse) {
+func (m *ShellyGetStatusMetrics) UpdateMetrics(status client.ShellyGetStatusResponse) {
 	deviceMAC := status.Sys.MAC
 
 	m.Uptime.WithLabelValues(deviceMAC).Set(float64(status.Sys.Uptime))

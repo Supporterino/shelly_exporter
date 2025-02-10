@@ -7,7 +7,7 @@ import (
 	"github.com/supporterino/shelly_exporter/client"
 )
 
-type ConfigMetrics struct {
+type ShellyGetConfigMetrics struct {
 	BLEEnabled           *prometheus.GaugeVec
 	CloudEnabled         *prometheus.GaugeVec
 	CloudServer          *prometheus.GaugeVec
@@ -18,11 +18,11 @@ type ConfigMetrics struct {
 	WifiRoamingThreshold *prometheus.GaugeVec
 }
 
-var metrics *ConfigMetrics
+var metrics *ShellyGetConfigMetrics
 
 // RegisterMetrics initializes and registers the Prometheus metrics
 func RegisterShellyGetConfigMetrics() {
-	metrics = &ConfigMetrics{
+	metrics = &ShellyGetConfigMetrics{
 		BLEEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "device",
@@ -99,7 +99,7 @@ func UpdateShellyGetConfigMetrics(apiClient *client.APIClient) error {
 }
 
 // UpdateMetrics populates the metrics from the config structure
-func (m *ConfigMetrics) UpdateMetrics(config client.ShellyGetConfigResponse) {
+func (m *ShellyGetConfigMetrics) UpdateMetrics(config client.ShellyGetConfigResponse) {
 	// BLE
 	if config.BLE.Enable {
 		m.BLEEnabled.WithLabelValues(config.Sys.Device.MAC).Set(1)

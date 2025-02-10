@@ -7,7 +7,7 @@ import (
 	"github.com/supporterino/shelly_exporter/client"
 )
 
-type StatusMetrics struct {
+type SwitchGetStatusMetrics struct {
 	State       *prometheus.GaugeVec
 	APower      *prometheus.GaugeVec
 	Voltage     *prometheus.GaugeVec
@@ -17,10 +17,10 @@ type StatusMetrics struct {
 	Temperature *prometheus.GaugeVec
 }
 
-var metrics *StatusMetrics
+var metrics *SwitchGetStatusMetrics
 
 func RegisterSwitchGetStatusMetrics() {
-	metrics = &StatusMetrics{
+	metrics = &SwitchGetStatusMetrics{
 		State: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "switch",
@@ -88,7 +88,7 @@ func UpdateSwitchGetStatusMetrics(apiClient *client.APIClient, switchID int, dev
 	return nil
 }
 
-func (m *StatusMetrics) UpdateMetrics(status client.SwitchGetStatusResponse, device_mac string) {
+func (m *SwitchGetStatusMetrics) UpdateMetrics(status client.SwitchGetStatusResponse, device_mac string) {
 	switchID := fmt.Sprintf("%d", status.ID)
 
 	m.State.WithLabelValues(device_mac, switchID).Set(boolToFloat64(status.Output))

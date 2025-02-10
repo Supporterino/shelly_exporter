@@ -120,6 +120,8 @@ func fetchAndUpdateMetrics(apiClient *client.APIClient, device_type string) erro
 		return fmt.Errorf("failed to update config metrics: %w", err)
 	}
 
+	slog.Debug("Device type:", slog.String("type", device_type))
+
 	switch device_type {
 	case "Plus2PM":
 		switch profile := ShellyGetDeviceInfo.GetDeviceProfile(); profile {

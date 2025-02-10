@@ -7,7 +7,7 @@ import (
 	"github.com/supporterino/shelly_exporter/client"
 )
 
-type GetDeviceInfoMetrics struct {
+type ShellyGetDeviceInfoMetrics struct {
 	DeviceInfo    *prometheus.GaugeVec
 	AuthEnabled   *prometheus.GaugeVec
 	DeviceModel   *string
@@ -15,10 +15,10 @@ type GetDeviceInfoMetrics struct {
 	DeviceMac     *string
 }
 
-var metrics *GetDeviceInfoMetrics
+var metrics *ShellyGetDeviceInfoMetrics
 
 func RegisterShellyGetDeviceInfoMetrics() {
-	metrics = &GetDeviceInfoMetrics{
+	metrics = &ShellyGetDeviceInfoMetrics{
 		DeviceInfo: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "device",
@@ -51,7 +51,7 @@ func UpdateShellyGetDeviceInfoMetrics(apiClient *client.APIClient) error {
 	return nil
 }
 
-func (m *GetDeviceInfoMetrics) UpdateMetrics(info client.ShellyGetDeviceInfoResponse) {
+func (m *ShellyGetDeviceInfoMetrics) UpdateMetrics(info client.ShellyGetDeviceInfoResponse) {
 	m.DeviceInfo.WithLabelValues(info.Name, info.ID, info.Mac, info.Model, info.FwID, info.App).Set(1)
 	m.AuthEnabled.WithLabelValues(info.Mac).Set(boolToFloat64(info.AuthEn))
 	m.DeviceModel = &info.App
