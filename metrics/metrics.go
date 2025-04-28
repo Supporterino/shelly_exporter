@@ -9,6 +9,7 @@ import (
 	ShellyGetStatus "github.com/supporterino/shelly_exporter/rpc/Shelly.GetStatus"
 	SwitchGetConfig "github.com/supporterino/shelly_exporter/rpc/Switch.GetConfig"
 	SwitchGetStatus "github.com/supporterino/shelly_exporter/rpc/Switch.GetStatus"
+	WiFiGetStatus "github.com/supporterino/shelly_exporter/rpc/WiFi.GetStatus"
 )
 
 // Register initializes Prometheus metrics and starts periodic API fetching.
@@ -19,6 +20,7 @@ func Register(cfg *config.YamlConfig, cfgPath *string) {
 	CoverGetStatus.RegisterCoverGetStatusMetrics()
 	SwitchGetStatus.RegisterSwitchGetStatusMetrics()
 	SwitchGetConfig.RegisterSwitchGetConfigMetrics()
+	WiFiGetStatus.RegisterWiFiGetStatusMetrics()
 
 	dm := rpc.NewDeviceManager()
 
