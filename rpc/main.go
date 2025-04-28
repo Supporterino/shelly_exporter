@@ -14,6 +14,7 @@ import (
 	ShellyGetStatus "github.com/supporterino/shelly_exporter/rpc/Shelly.GetStatus"
 	SwitchGetConfig "github.com/supporterino/shelly_exporter/rpc/Switch.GetConfig"
 	SwitchGetStatus "github.com/supporterino/shelly_exporter/rpc/Switch.GetStatus"
+	WiFiGetStatus "github.com/supporterino/shelly_exporter/rpc/WiFi.GetStatus"
 )
 
 // DeviceManager manages registered devices.
@@ -133,6 +134,10 @@ func fetchAndUpdateMetrics(apiClient *client.APIClient, device *DeviceConfig) er
 			if err != nil {
 				return fmt.Errorf("failed to update cover metrics: %w", err)
 			}
+			err = WiFiGetStatus.UpdateWiFiGetStatusMetrics(apiClient, device.Mac)
+			if err != nil {
+				return fmt.Errorf("failed to update wifi metrics: %w", err)
+			}
 		}
 	case "PlusPlugS":
 		err := SwitchGetStatus.UpdateSwitchGetStatusMetrics(apiClient, 0, device.Mac)
@@ -143,6 +148,10 @@ func fetchAndUpdateMetrics(apiClient *client.APIClient, device *DeviceConfig) er
 		if err != nil {
 			return fmt.Errorf("failed to update switch conig metrics: %w", err)
 		}
+		err = WiFiGetStatus.UpdateWiFiGetStatusMetrics(apiClient, device.Mac)
+		if err != nil {
+			return fmt.Errorf("failed to update wifi metrics: %w", err)
+		}
 	case "Mini1G3":
 		err := SwitchGetStatus.UpdateSwitchGetStatusMetrics(apiClient, 0, device.Mac)
 		if err != nil {
@@ -151,6 +160,10 @@ func fetchAndUpdateMetrics(apiClient *client.APIClient, device *DeviceConfig) er
 		err = SwitchGetConfig.UpdateSwitchGetConfigMetrics(apiClient, 0, device.Mac)
 		if err != nil {
 			return fmt.Errorf("failed to update switch conig metrics: %w", err)
+		}
+		err = WiFiGetStatus.UpdateWiFiGetStatusMetrics(apiClient, device.Mac)
+		if err != nil {
+			return fmt.Errorf("failed to update wifi metrics: %w", err)
 		}
 	}
 
