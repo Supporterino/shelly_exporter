@@ -33,14 +33,15 @@ jobs:
         run: |
           version=$(yq '.version' < charts/shelly-exporter/Chart.yaml)
           echo "chart_version=$version" >> $GITHUB_OUTPUT
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Chart | Push
         uses: appany/helm-oci-chart-releaser@v0.4.2
         with:
           name: shelly-exporter
-          repository: ${{ github.repository_owner }}
+          repository: ${{ steps.read-chart-version.outputs.owner }}
           tag: ${{ steps.read-chart-version.outputs.chart_version }}
           registry: ghcr.io
-          registry_username: ${{ github.repository_owner }}
+          registry_username: ${{ steps.read-chart-version.outputs.owner }}
           registry_password: ${{ secrets.GITHUB_TOKEN }}
           update_dependencies: 'true' # Defaults to false
