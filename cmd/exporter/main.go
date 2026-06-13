@@ -40,7 +40,7 @@ func main() {
 		w.Write([]byte(`<html>
              <head><title>Shelly Exporter</title></head>
              <body>
-             <h1>Haproxy Exporter</h1>
+             <h1>Shelly Exporter</h1>
              <p><a href=/metrics>Metrics</a></p>
              </body>
              </html>`))
