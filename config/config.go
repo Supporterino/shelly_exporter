@@ -42,7 +42,33 @@ func NewConfig(configPath string) (*YamlConfig, error) {
 		return nil, err
 	}
 
+	applyCredentialDefaults(config)
 	return config, nil
+}
+
+// applyCredentialDefaults fills empty per-device credentials from the global
+// SHELLY_USERNAME / SHELLY_PASSWORD environment variables. This lets the
+// operator-rendered config carry hosts only while one shared admin password is
+// supplied via the environment. A device that ends up with a password but no
+// username defaults to "admin" (the Shelly Gen2 account). Explicit per-device
+// values in the config file always win.
+func applyCredentialDefaults(cfg *YamlConfig) {
+	envUser := os.Getenv("SHELLY_USERNAME")
+	envPass := os.Getenv("SHELLY_PASSWORD")
+	for i := range cfg.Devices {
+		d := &cfg.Devices[i]
+		if d.Password == "" {
+			d.Password = envPass
+		}
+		if d.Username == "" {
+			switch {
+			case envUser != "":
+				d.Username = envUser
+			case d.Password != "":
+				d.Username = "admin"
+			}
+		}
+	}
 }
 
 // ParseFlags will create and parse the CLI flags

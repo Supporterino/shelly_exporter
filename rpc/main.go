@@ -42,7 +42,7 @@ func (dm *DeviceManager) RegisterDevice(device *DeviceConfig, updateInterval tim
 
 	slog.Info("Registering new device", slog.String("host", device.Host))
 
-	apiClient := client.NewAPIClient(device.Host, 10*time.Second)
+	apiClient := client.NewAPIClient(device.Host, device.Username, device.Password, 10*time.Second)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Initialize device type

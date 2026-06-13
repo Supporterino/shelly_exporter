@@ -14,6 +14,7 @@ This fork replaces the device-type switch statement with **dynamic component dis
 
 - **Dynamic component discovery** (`client/api_client.go`) - parses `Shelly.GetStatus` response keys to find `switch:N` and `cover:N` components
 - **Generic metrics collection** (`rpc/main.go`) - iterates over discovered components instead of matching device types; WiFi metrics always collected
+- **HTTP digest auth** (`client/api_client.go`) - implements Shelly Gen2 digest authentication (SHA-256, user `admin`). The `username`/`password` config fields were previously inert; they now authenticate, and a global credential can be supplied via environment variables (see Authentication).
 - **Dockerfile** - removed bundled `config.yaml`, clean entrypoint accepting `--config` flag
 - **CI workflows** - use `GITHUB_TOKEN` instead of custom `TOKEN` secret
 
@@ -46,6 +47,27 @@ devices:
 | `devices[].host` | Device IP address | (required) |
 | `devices[].username` | Auth username (if enabled) | (empty) |
 | `devices[].password` | Auth password (if enabled) | (empty) |
+
+### Authentication
+
+Shelly Gen2+ devices use HTTP digest auth (SHA-256, account `admin`). When a
+device has auth enabled, supply the password and the exporter authenticates
+automatically.
+
+Two ways to provide credentials (per-device config wins over the environment):
+
+- **Per-device** in `config.yaml` via `devices[].username` / `devices[].password`.
+- **Global** via environment variables, applied to every device that has no
+  explicit credential:
+
+  | Env var | Description | Default |
+  |---|---|---|
+  | `SHELLY_USERNAME` | Auth username for all devices | `admin` (used when a password is set) |
+  | `SHELLY_PASSWORD` | Auth password for all devices | (empty) |
+
+The global option suits a fleet that shares one admin password and a config
+listing only hosts (e.g. one rendered by an operator): set `SHELLY_PASSWORD`
+once and every device authenticates as `admin`.
 
 ### Endpoints
 
