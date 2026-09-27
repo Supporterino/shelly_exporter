@@ -256,7 +256,26 @@ func TestEmptyMACSeriesRemovedAfterRecovery(t *testing.T) {
 	}
 }
 
-func TestMACChangeReplacesUpSeries(t *testing.T) {
+func allDeviceMACs(t *testing.T, reg *prometheus.Registry) map[string]bool {
+	t.Helper()
+	families, err := reg.Gather()
+	if err != nil {
+		t.Fatalf("gather failed: %v", err)
+	}
+	macs := make(map[string]bool)
+	for _, family := range families {
+		for _, metric := range family.GetMetric() {
+			for _, label := range metric.GetLabel() {
+				if label.GetName() == "device_mac" {
+					macs[label.GetValue()] = true
+				}
+			}
+		}
+	}
+	return macs
+}
+
+func TestMACChangeReplacesDeviceSeries(t *testing.T) {
 	reg := prometheus.NewRegistry()
 	cols, err := NewCollectors(reg)
 	if err != nil {
@@ -265,17 +284,31 @@ func TestMACChangeReplacesUpSeries(t *testing.T) {
 	dm := NewDeviceManager(time.Hour, cols, nil, testLogger())
 
 	mac := "AA:BB"
-	fetcher := newMockFetcher(fullResponses("PlusPlugS", "switch"))
-	fetcher.responses["/rpc/Shelly.GetDeviceInfo"] = func(int) (any, error) {
-		return map[string]any{
-			"name": "Dev", "id": "123", "mac": mac, "model": "M",
-			"fw_id": "fw", "app": "PlusPlugS", "auth_en": false, "profile": "switch",
-		}, nil
-	}
+	info := deviceInfoPayload("PlusPlugS", "switch")
+	status := statusPayload()
+	config := configPayload()
+
+	fetcher := newMockFetcher(map[string]func(int) (any, error){
+		"/rpc/Shelly.GetDeviceInfo": func(int) (any, error) { info["mac"] = mac; return info, nil },
+		"/rpc/Shelly.GetStatus": func(int) (any, error) {
+			status["sys"].(map[string]any)["mac"] = mac
+			return status, nil
+		},
+		"/rpc/Shelly.GetConfig": func(int) (any, error) {
+			config["sys"].(map[string]any)["device"].(map[string]any)["mac"] = mac
+			return config, nil
+		},
+		"/rpc/Switch.GetStatus": static(switchStatusPayload()),
+		"/rpc/Switch.GetConfig": static(switchConfigPayload()),
+		"/rpc/WiFi.GetStatus":   static(wifiPayload()),
+	})
 
 	state := &deviceState{host: "host1", fetcher: fetcher}
 	if err := dm.poll(context.Background(), state); err != nil {
 		t.Fatalf("poll returned error: %v", err)
+	}
+	if !allDeviceMACs(t, reg)["AA:BB"] {
+		t.Fatal("expected AA:BB series after the first poll")
 	}
 
 	mac = "CC:DD"
@@ -283,9 +316,12 @@ func TestMACChangeReplacesUpSeries(t *testing.T) {
 		t.Fatalf("poll returned error: %v", err)
 	}
 
-	macs := upDeviceMACs(t, reg, "host1")
-	if len(macs) != 1 || macs[0] != "CC:DD" {
-		t.Fatalf("up series after MAC change = %v, want one CC:DD MAC", macs)
+	macs := allDeviceMACs(t, reg)
+	if macs["AA:BB"] {
+		t.Errorf("stale AA:BB series survived the MAC change: %v", macs)
+	}
+	if !macs["CC:DD"] {
+		t.Errorf("CC:DD series missing after the MAC change: %v", macs)
 	}
 }
 

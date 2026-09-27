@@ -52,6 +52,11 @@ func NewShellyStatusCollector(reg prometheus.Registerer) (*ShellyStatusCollector
 	return c, nil
 }
 
+// Delete removes every metric series for a device.
+func (c *ShellyStatusCollector) Delete(deviceMAC string) {
+	deleteDeviceSeries(deviceMAC, c.Uptime, c.RAM, c.FS, c.WiFiRSSI)
+}
+
 // Update fetches Shelly.GetStatus and updates the collector metrics.
 func (c *ShellyStatusCollector) Update(ctx context.Context, fetcher client.Fetcher) error {
 	var status client.ShellyGetStatusResponse

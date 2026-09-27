@@ -81,6 +81,13 @@ func NewSwitchStatusCollector(reg prometheus.Registerer) (*SwitchStatusCollector
 	return c, nil
 }
 
+// Delete removes every metric series for a device.
+func (c *SwitchStatusCollector) Delete(deviceMAC string) {
+	deleteDeviceSeries(deviceMAC,
+		c.State, c.APower, c.Voltage, c.Current, c.Freq, c.Energy, c.Temperature,
+	)
+}
+
 // Update fetches Switch.GetStatus and updates the collector metrics. name is the
 // human-readable channel name reported in the device configuration.
 func (c *SwitchStatusCollector) Update(ctx context.Context, fetcher client.Fetcher, switchID int, name, deviceMAC string) error {

@@ -161,7 +161,7 @@ func (dm *DeviceManager) applyDeviceInfo(d *deviceState, info client.ShellyGetDe
 	d.profile = info.Profile
 
 	if d.mac != previousMAC {
-		dm.collectors.Up.Delete(previousMAC, d.host)
+		dm.collectors.DeleteDevice(previousMAC, d.host)
 	}
 }
 

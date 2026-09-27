@@ -26,3 +26,12 @@ func setGauge(g *prometheus.GaugeVec, value *float64, labels ...string) {
 		g.WithLabelValues(labels...).Set(*value)
 	}
 }
+
+// deleteDeviceSeries removes every series carrying the device_mac label from
+// the given vectors. It is used when a device starts reporting a different MAC
+// so the exporter does not keep exposing stale series under the old MAC.
+func deleteDeviceSeries(deviceMAC string, vecs ...*prometheus.GaugeVec) {
+	for _, v := range vecs {
+		v.DeletePartialMatch(prometheus.Labels{"device_mac": deviceMAC})
+	}
+}

@@ -45,6 +45,11 @@ func NewWiFiStatusCollector(reg prometheus.Registerer) (*WiFiStatusCollector, er
 	return c, nil
 }
 
+// Delete removes every metric series for a device.
+func (c *WiFiStatusCollector) Delete(deviceMAC string) {
+	deleteDeviceSeries(deviceMAC, c.Status, c.SSID, c.RSSI)
+}
+
 // Update fetches WiFi.GetStatus and updates the collector metrics.
 func (c *WiFiStatusCollector) Update(ctx context.Context, fetcher client.Fetcher, deviceMAC string) error {
 	var status client.WiFiGetStatusResponse

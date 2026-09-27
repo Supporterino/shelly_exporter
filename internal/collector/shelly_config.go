@@ -89,6 +89,14 @@ func NewShellyConfigCollector(reg prometheus.Registerer) (*ShellyConfigCollector
 	return c, nil
 }
 
+// Delete removes every metric series for a device.
+func (c *ShellyConfigCollector) Delete(deviceMAC string) {
+	deleteDeviceSeries(deviceMAC,
+		c.BLEEnabled, c.CloudEnabled, c.CloudServer, c.EthEnabled,
+		c.EthIPv4Mode, c.WiFiAPEnabled, c.WiFiSTAEnabled, c.WiFiRoamingThreshold,
+	)
+}
+
 // Update fetches Shelly.GetConfig, updates the collector metrics, and returns
 // the decoded configuration so callers can discover the device's components.
 func (c *ShellyConfigCollector) Update(ctx context.Context, fetcher client.Fetcher) (client.ShellyGetConfigResponse, error) {

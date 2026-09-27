@@ -38,6 +38,11 @@ func NewDeviceInfoCollector(reg prometheus.Registerer) (*DeviceInfoCollector, er
 	return c, nil
 }
 
+// Delete removes every metric series for a device.
+func (c *DeviceInfoCollector) Delete(deviceMAC string) {
+	deleteDeviceSeries(deviceMAC, c.DeviceInfo, c.AuthEnabled)
+}
+
 // Update fetches Shelly.GetDeviceInfo, updates the metrics, and returns the
 // decoded device information.
 func (c *DeviceInfoCollector) Update(ctx context.Context, fetcher client.Fetcher) (client.ShellyGetDeviceInfoResponse, error) {

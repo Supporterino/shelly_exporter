@@ -17,6 +17,19 @@ type Collectors struct {
 	Up           *collector.UpCollector
 }
 
+// DeleteDevice removes every metric series belonging to a device, including its
+// scrape-success series. It is used when a device reports a new MAC address.
+func (c *Collectors) DeleteDevice(deviceMAC, host string) {
+	c.ShellyStatus.Delete(deviceMAC)
+	c.ShellyConfig.Delete(deviceMAC)
+	c.DeviceInfo.Delete(deviceMAC)
+	c.CoverStatus.Delete(deviceMAC)
+	c.SwitchStatus.Delete(deviceMAC)
+	c.SwitchConfig.Delete(deviceMAC)
+	c.WiFiStatus.Delete(deviceMAC)
+	c.Up.Delete(deviceMAC, host)
+}
+
 // NewCollectors constructs and registers all exporter collectors.
 func NewCollectors(reg prometheus.Registerer) (*Collectors, error) {
 	shellyStatus, err := collector.NewShellyStatusCollector(reg)

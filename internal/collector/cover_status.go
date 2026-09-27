@@ -105,6 +105,14 @@ func NewCoverStatusCollector(reg prometheus.Registerer) (*CoverStatusCollector, 
 	return c, nil
 }
 
+// Delete removes every metric series for a device.
+func (c *CoverStatusCollector) Delete(deviceMAC string) {
+	deleteDeviceSeries(deviceMAC,
+		c.State, c.APower, c.Voltage, c.Current, c.Pf,
+		c.Freq, c.Energy, c.Temperature, c.PosControl, c.Position,
+	)
+}
+
 // Update fetches Cover.GetStatus and updates the collector metrics. name is the
 // human-readable channel name reported in the device configuration.
 func (c *CoverStatusCollector) Update(ctx context.Context, fetcher client.Fetcher, coverID int, name, deviceMAC string) error {

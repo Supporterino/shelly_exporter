@@ -81,6 +81,14 @@ func NewSwitchConfigCollector(reg prometheus.Registerer) (*SwitchConfigCollector
 	return c, nil
 }
 
+// Delete removes every metric series for a device.
+func (c *SwitchConfigCollector) Delete(deviceMAC string) {
+	deleteDeviceSeries(deviceMAC,
+		c.InitialState, c.AutoOn, c.AutoOff, c.RecoverVoltageErrors,
+		c.PowerLimit, c.VoltageLimit, c.CurrentLimit,
+	)
+}
+
 // Update fetches Switch.GetConfig and updates the collector metrics.
 func (c *SwitchConfigCollector) Update(ctx context.Context, fetcher client.Fetcher, switchID int, deviceMAC string) error {
 	var cfg client.SwitchGetConfigResponse
