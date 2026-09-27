@@ -1,6 +1,6 @@
 listenAddress: :8080
 debug: false
-deviceUpdateInterval: 30
+deviceUpdateInterval: 30s
 devices:
 - host: 10.1.255.111
 - host: 10.1.255.112

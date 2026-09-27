@@ -25,3 +25,8 @@ go.work.sum
 .env
 # Added by goreleaser init:
 dist/
+
+# Build output
+bin/
+
+graphify-out/cache
