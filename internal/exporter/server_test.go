@@ -28,6 +28,7 @@ func TestHandlers(t *testing.T) {
 		{path: "/"},
 		{path: "/health"},
 		{path: "/metrics"},
+		{path: "/unknown"},
 	}
 
 	for _, tt := range tests {

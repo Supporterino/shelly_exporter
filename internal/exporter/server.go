@@ -26,11 +26,7 @@ func NewHandler(reg prometheus.Gatherer) http.Handler {
 	return mux
 }
 
-func landingHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
+func landingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if _, err := io.WriteString(w, landingPage); err != nil {
 		slog.Debug("Failed to write landing page", slog.Any("error", err))
