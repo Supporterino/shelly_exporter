@@ -41,7 +41,7 @@ type Wifi struct {
 }
 
 type ShellyGetStatusResponse struct {
-	BLE   map[string]interface{}   `json:"ble"`
+	BLE   map[string]any           `json:"ble"`
 	Cloud struct{ Connected bool } `json:"cloud"`
 	Eth   struct{ IP string }      `json:"eth"`
 	MQTT  struct{ Connected bool } `json:"mqtt"`

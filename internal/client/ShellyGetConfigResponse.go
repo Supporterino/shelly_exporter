@@ -1,14 +1,15 @@
 package client
 
 type ShellyGetConfigResponse struct {
-	BLE      BLE   `json:"ble"`
-	Cloud    Cloud `json:"cloud"`
-	Eth      Eth   `json:"eth"`
-	Inputs   map[string]ShellyGetConfigResponseInput
-	Switches map[string]ShellyGetConfigResponseSwitch
-	MQTT     MQTT                        `json:"mqtt"`
-	Sys      ShellyGetConfigResponseSys  `json:"sys"`
-	Wifi     ShellyGetConfigResponseWifi `json:"wifi"`
+	BLE      BLE                                      `json:"ble"`
+	Cloud    Cloud                                    `json:"cloud"`
+	Eth      Eth                                      `json:"eth"`
+	Inputs   map[string]ShellyGetConfigResponseInput  `json:"-"`
+	Switches map[string]ShellyGetConfigResponseSwitch `json:"-"`
+	Covers   map[string]CoverGetConfigResponse        `json:"-"`
+	MQTT     MQTT                                     `json:"mqtt"`
+	Sys      ShellyGetConfigResponseSys               `json:"sys"`
+	Wifi     ShellyGetConfigResponseWifi              `json:"wifi"`
 }
 
 type BLE struct {
@@ -68,7 +69,7 @@ type ShellyGetConfigResponseSys struct {
 		Lat float64 `json:"lat"`
 		Lon float64 `json:"lon"`
 	} `json:"location"`
-	UIData map[string]interface{} `json:"ui_data"`
+	UIData map[string]any `json:"ui_data"`
 	SNTP   struct {
 		Server string `json:"server"`
 	} `json:"sntp"`

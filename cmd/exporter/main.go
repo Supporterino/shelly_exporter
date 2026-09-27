@@ -1,72 +1,44 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"log/slog"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/supporterino/shelly_exporter/config"
-	"github.com/supporterino/shelly_exporter/metrics"
+	"github.com/supporterino/shelly_exporter/internal/config"
+	"github.com/supporterino/shelly_exporter/internal/exporter"
 )
 
 func main() {
+	if err := run(); err != nil {
+		slog.Error("Exporter failed", slog.Any("error", err))
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	cfgPath, err := config.ParseFlags()
 	if err != nil {
-		log.Fatal("Error parsing config path:", slog.Any("error", err))
+		return err
 	}
-	cfg, err := config.NewConfig(cfgPath)
+
+	cfg, err := config.Load(cfgPath)
 	if err != nil {
-		log.Fatal("Error loading config:", slog.Any("error", err))
+		return err
 	}
 
-	// Configure slog based on the debug flag
-	var logger *slog.Logger
-	if cfg.Debug {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	} else {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	}
-
+	logger := exporter.NewLogger(cfg.Debug, os.Stdout)
 	slog.SetDefault(logger)
 
-	// Register custom metrics
-	metrics.Register(cfg, &cfgPath)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	// Expose endpoints
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
-             <head><title>Shelly Exporter</title></head>
-             <body>
-             <h1>Shelly Exporter</h1>
-             <p><a href=/metrics>Metrics</a></p>
-             </body>
-             </html>`))
-	})
-	http.Handle("/metrics", promhttp.Handler())
-	http.HandleFunc("/health", healthHandler)
-
-	logger.Info("Starting Prometheus exporter", slog.String("address", cfg.ListenAddress))
-	if err := http.ListenAndServe(cfg.ListenAddress, nil); err != nil {
-		logger.Error("Error starting HTTP server", slog.Any("error", err))
+	app, err := exporter.New(cfg, logger)
+	if err != nil {
+		return err
 	}
-}
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	// Check the health of the server and return a status code accordingly
-	if serverIsHealthy() {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "Server is healthy")
-	} else {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, "Server is not healthy")
-	}
-}
-
-func serverIsHealthy() bool {
-	// Check the health of the server and return true or false accordingly
-	// For example, check if the server can connect to the database
-	return true
+	return app.Run(ctx)
 }

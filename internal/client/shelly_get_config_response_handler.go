@@ -3,6 +3,8 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -16,6 +18,7 @@ func (r *ShellyGetConfigResponse) UnmarshalJSON(data []byte) error {
 	// Initialize dynamic maps
 	r.Inputs = make(map[string]ShellyGetConfigResponseInput)
 	r.Switches = make(map[string]ShellyGetConfigResponseSwitch)
+	r.Covers = make(map[string]CoverGetConfigResponse)
 
 	// Iterate through raw data
 	for key, value := range raw {
@@ -35,6 +38,14 @@ func (r *ShellyGetConfigResponse) UnmarshalJSON(data []byte) error {
 				return fmt.Errorf("failed to unmarshal switch '%s': %w", key, err)
 			}
 			r.Switches[key] = sw
+
+		case strings.HasPrefix(key, "cover:"):
+			// Parse dynamic cover keys
+			var cover CoverGetConfigResponse
+			if err := json.Unmarshal(value, &cover); err != nil {
+				return fmt.Errorf("failed to unmarshal cover '%s': %w", key, err)
+			}
+			r.Covers[key] = cover
 
 		case key == "ble":
 			if err := json.Unmarshal(value, &r.BLE); err != nil {
@@ -72,4 +83,32 @@ func (r *ShellyGetConfigResponse) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+// SwitchIDs returns the sorted switch component IDs present in the config.
+func (r *ShellyGetConfigResponse) SwitchIDs() []int {
+	return componentIDs(r.Switches)
+}
+
+// CoverIDs returns the sorted cover component IDs present in the config.
+func (r *ShellyGetConfigResponse) CoverIDs() []int {
+	return componentIDs(r.Covers)
+}
+
+// componentIDs extracts the numeric component IDs from keys such as "switch:0".
+func componentIDs[V any](components map[string]V) []int {
+	ids := make([]int, 0, len(components))
+	for key := range components {
+		_, value, ok := strings.Cut(key, ":")
+		if !ok {
+			continue
+		}
+		id, err := strconv.Atoi(value)
+		if err != nil {
+			continue
+		}
+		ids = append(ids, id)
+	}
+	sort.Ints(ids)
+	return ids
 }
