@@ -120,7 +120,7 @@ func TestShellyConfigCharacterization(t *testing.T) {
 		t.Errorf("roaming threshold = %v, want -70", got)
 	}
 	assertFamily(t, reg, "shelly_device_ble")
-	assertFamily(t, reg, "selly_device_eth_ipv4_mode")
+	assertFamily(t, reg, "shelly_device_eth_ipv4_mode")
 }
 
 func TestDeviceInfoCharacterization(t *testing.T) {

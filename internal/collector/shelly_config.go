@@ -48,7 +48,7 @@ func NewShellyConfigCollector(reg prometheus.Registerer) (*ShellyConfigCollector
 			Help:      "Indicates if Ethernet is enabled (1 for true, 0 for false)",
 		}, []string{"device_mac"}),
 		EthIPv4Mode: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "selly",
+			Namespace: "shelly",
 			Subsystem: "device",
 			Name:      "eth_ipv4_mode",
 			Help:      "Ethernet IPv4 mode (labels include mode)",

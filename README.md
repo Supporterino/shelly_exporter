@@ -97,12 +97,10 @@ Devices with any other `app` value are still polled for the generic `Shelly.GetD
 | `shelly_device_cloud`                    | `device_mac`         | Indicates if Cloud is enabled (1 for true, 0 for false).          |
 | `shelly_device_cloud_server`             | `device_mac`, `server` | Cloud server configuration (labels include the server address).  |
 | `shelly_device_eth`                      | `device_mac`         | Indicates if Ethernet is enabled (1 for true, 0 for false).       |
-| `selly_device_eth_ipv4_mode`             | `device_mac`, `mode` | Ethernet IPv4 mode (for example `dhcp`). Only exported when the device reports an Ethernet IPv4 mode. |
+| `shelly_device_eth_ipv4_mode`            | `device_mac`, `mode` | Ethernet IPv4 mode (for example `dhcp`). Only exported when the device reports an Ethernet IPv4 mode. |
 | `shelly_device_wifi_ap`                  | `device_mac`         | Indicates if Wi-Fi AP is enabled (1 for true, 0 for false).       |
 | `shelly_device_wifi_sta`                 | `device_mac`         | Indicates if Wi-Fi STA is enabled (1 for true, 0 for false).      |
 | `shelly_device_wifi_roaming_rssi_threshold` | `device_mac`      | RSSI threshold for Wi-Fi roaming.                                 |
-
-> Note: `selly_device_eth_ipv4_mode` retains its historical `selly` namespace to avoid changing an already-exposed metric name.
 
 ### Cover.GetStatus
 

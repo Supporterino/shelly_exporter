@@ -2042,7 +2042,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "editorMode": "code",
-          "expr": "selly_device_eth_ipv4_mode{device_mac=~\"$device\"}",
+          "expr": "shelly_device_eth_ipv4_mode{device_mac=~\"$device\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "IPv4 mode",

@@ -18,6 +18,10 @@
   RSSI remains the sample value). Switch and cover metric families now carry a
   `name` label with the configured channel name. Update dashboards and alerts
   that select on these label sets.
+- **Metric name:** the Ethernet IPv4 mode metric is now exposed as
+  `shelly_device_eth_ipv4_mode`. It was previously misspelled
+  `selly_device_eth_ipv4_mode` (missing `h`). Update dashboards and alerts that
+  reference the old name.
 
 ### Added
 
