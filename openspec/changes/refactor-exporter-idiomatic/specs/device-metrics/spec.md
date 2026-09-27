@@ -26,6 +26,34 @@ The exporter SHALL select which metric families to collect based on the device m
 - **WHEN** a registered device reports a switch model
 - **THEN** the exporter collects switch status, switch configuration, and Wi-Fi status metrics for that device
 
+#### Scenario: Multi-channel switch model
+- **WHEN** a registered device reports a switch model with more than one switch component (for example a `Pro4PM`)
+- **THEN** the exporter collects switch status and switch configuration metrics for every switch component, each with its own `switch_id` label
+
+#### Scenario: Dual-profile model
+- **WHEN** a registered device reports the `Plus2PM` model with the `cover` profile
+- **THEN** the exporter collects cover and Wi-Fi status metrics
+- **WHEN** it reports the `switch` profile
+- **THEN** the exporter collects switch status, switch configuration, and Wi-Fi status metrics
+
+### Requirement: Component discovery
+The exporter SHALL discover switch and cover component IDs from the device's `Shelly.GetConfig` response and collect metrics for each discovered component, so multi-channel devices are supported without per-model channel counts.
+
+#### Scenario: Components enumerated
+- **WHEN** `Shelly.GetConfig` contains components `switch:0` through `switch:3`
+- **THEN** the exporter polls `Switch.GetStatus` and `Switch.GetConfig` for IDs 0, 1, 2, and 3
+
+#### Scenario: No components discovered
+- **WHEN** a device's configuration exposes no switch or cover component (for example a mocked response)
+- **THEN** the exporter falls back to polling component ID 0
+
+### Requirement: Absent fields omitted
+The exporter SHALL omit a metric when the device response does not include the corresponding field, so it does not publish fabricated zero readings for unsupported capabilities.
+
+#### Scenario: Relay without metering
+- **WHEN** a switch status response contains only `output` and `temperature`
+- **THEN** the exporter exposes switch state and temperature and does not expose power, voltage, current, frequency, or energy series for that switch
+
 ### Requirement: Unknown model handling
 The exporter SHALL handle a device whose model is not recognized without panicking and SHALL log that no model-specific metrics are collected.
 

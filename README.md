@@ -33,56 +33,133 @@ Shelly Prometheus Exporter can be deployed in three different ways:
 
 ### Configuration
 
-- **Standalone Binary and Docker Image**: Requires a `config.yaml` file that defines the necessary settings. Refer to the example in the repository for configuration options.
+- **Standalone Binary and Docker Image**: The exporter reads a YAML configuration file. The path is supplied with the `-config` flag and defaults to `config.yaml`. Unknown fields are rejected at startup so typos fail fast.
 - **Helm Chart**: Configuration is managed through the `values.yaml` file, allowing fine-tuned customization of the deployment.
+
+```yaml
+listenAddress: :8080
+debug: false
+deviceUpdateInterval: 30s
+devices:
+  - host: 10.1.255.111
+  - host: 10.1.255.112
+    username: admin
+    password: secret
+```
+
+- `listenAddress` — HTTP listen address (default `:8080`).
+- `debug` — emit debug-level logs (default `false`).
+- `deviceUpdateInterval` — polling period as a Go duration string such as `30s` or `1m` (default `30s`). A bare integer is rejected.
+- `devices` — list of devices to poll, each with a `host` and optional `username`/`password`. When credentials are configured, the exporter authenticates using the scheme the device advertises (`WWW-Authenticate`): HTTP Basic or HTTP Digest (MD5 or SHA-256).
 
 ## Metrics
 
-The exporter fetches metrics from various RPC calls in the Shelly API. Below are the exposed metrics. Contributions for additional metrics are welcome.
+The exporter fetches metrics from various RPC calls in the Shelly API. Below are the exposed metric families with their exact Prometheus names and labels. Contributions for additional metrics are welcome.
 
-### Shelly.GetConfig
+### Supported models
 
-| Metric Name                     | Labels                              | Example                                                                 | Explanation                                                            |
-|---------------------------------|-------------------------------------|-------------------------------------------------------------------------|------------------------------------------------------------------------|
-| `ble_enabled`                   | `device_mac`                       | `ble_enabled{device_mac="AA:BB:CC:DD:EE:FF"} 1`                        | Indicates if BLE is enabled (1 for true, 0 for false).                |
-| `cloud_enabled`                 | `device_mac`                       | `cloud_enabled{device_mac="AA:BB:CC:DD:EE:FF"} 0`                      | Indicates if Cloud is enabled (1 for true, 0 for false).              |
-| `cloud_server_info`             | `device_mac`, `server`             | `cloud_server_info{device_mac="AA:BB:CC:DD:EE:FF", server="example.com"} 1` | Provides cloud server configuration (e.g., server address).           |
-| `eth_enabled`                   | `device_mac`                       | `eth_enabled{device_mac="AA:BB:CC:DD:EE:FF"} 1`                        | Indicates if Ethernet is enabled (1 for true, 0 for false).           |
-| `eth_ipv4_mode`                 | `device_mac`, `mode`               | `eth_ipv4_mode{device_mac="AA:BB:CC:DD:EE:FF", mode="dhcp"} 1`         | Reports the IPv4 mode of Ethernet (e.g., `dhcp`, `static`).           |
-| `input_inverted`                | `device_mac`, `input_id`, `type`   | `input_inverted{device_mac="AA:BB:CC:DD:EE:FF", input_id="1", type="digital"} 1` | Shows the state of inputs, including type and ID.                     |
-| `switch_auto_on`                | `device_mac`, `switch_id`          | `switch_auto_on{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 1`      | Indicates if the automatic on feature is enabled for a switch.        |
-| `switch_auto_on_delay`          | `device_mac`, `switch_id`          | `switch_auto_on_delay{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 30` | Reports the delay (in seconds) before the switch auto-on feature activates. |
-| `switch_auto_off_delay`         | `device_mac`, `switch_id`          | `switch_auto_off_delay{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 60` | Reports the delay (in seconds) before the switch auto-off feature activates. |
-| `switch_power_limit`            | `device_mac`, `switch_id`          | `switch_power_limit{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 100` | Specifies the power limit (in watts) for a switch.                    |
-| `wifi_ap_enabled`               | `device_mac`                       | `wifi_ap_enabled{device_mac="AA:BB:CC:DD:EE:FF"} 1`                    | Indicates if the Wi-Fi Access Point (AP) is enabled (1 for true, 0 for false). |
-| `wifi_sta_enabled`              | `device_mac`                       | `wifi_sta_enabled{device_mac="AA:BB:CC:DD:EE:FF"} 0`                   | Indicates if the Wi-Fi Station (STA) mode is enabled (1 for true, 0 for false). |
-| `wifi_roaming_rssi_threshold`   | `device_mac`                       | `wifi_roaming_rssi_threshold{device_mac="AA:BB:CC:DD:EE:FF"} -75`      | Reports the RSSI threshold for triggering Wi-Fi roaming.              |
+Model-specific metrics are collected by the `app` value reported by `Shelly.GetDeviceInfo`:
 
-### Shelly.GetStatus
+| `app`       | Collected metric families                                   |
+|-------------|-------------------------------------------------------------|
+| `Plus2PM`   | Cover metrics when `profile` is `cover`, otherwise switch metrics (covers both channels). |
+| `PlusPlugS` | Switch metrics.                                             |
+| `Mini1G3`   | Switch metrics.                                             |
+| `Pro4PM`    | Switch metrics for every channel (`switch_id` = `0`–`3`).   |
 
-| Metric Name             | Labels                                    | Example                                                                                       | Explanation                                                           |
-|-------------------------|-------------------------------------------|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| `input_state`           | `device_mac`, `input_id`                 | `input_state{device_mac="AA:BB:CC:DD:EE:FF", input_id="1"} 1`                                 | Indicates the state of a specific input (e.g., on/off).               |
-| `switch_state`          | `device_mac`, `switch_id`                | `switch_state{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 1`                               | Indicates the state of a switch (e.g., on/off).                       |
-| `switch_apower`         | `device_mac`, `switch_id`                | `switch_apower{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 150`                            | Apparent power of the switch in watts.                                |
-| `switch_voltage`        | `device_mac`, `switch_id`                | `switch_voltage{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 230`                           | Voltage level of the switch in volts.                                 |
-| `switch_current`        | `device_mac`, `switch_id`                | `switch_current{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 0.65`                          | Current drawn by the switch in amperes.                               |
-| `switch_energy`         | `device_mac`, `switch_id`                | `switch_energy{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 12.5`                           | Energy consumption of the switch in kilowatt-hours.                   |
-| `switch_temperature`    | `device_mac`, `switch_id`                | `switch_temperature{device_mac="AA:BB:CC:DD:EE:FF", switch_id="1"} 45`                        | Temperature of the switch in degrees Celsius.                         |
-| `system_uptime`         | `device_mac`                             | `system_uptime{device_mac="AA:BB:CC:DD:EE:FF"} 3600`                                          | System uptime in seconds.                                             |
-| `system_ram_free`       | `device_mac`                             | `system_ram_free{device_mac="AA:BB:CC:DD:EE:FF"} 1048576`                                     | Amount of free RAM in bytes.                                          |
-| `system_ram_size`       | `device_mac`                             | `system_ram_size{device_mac="AA:BB:CC:DD:EE:FF"} 2097152`                                     | Total RAM size in bytes.                                              |
-| `system_fs_free`        | `device_mac`                             | `system_fs_free{device_mac="AA:BB:CC:DD:EE:FF"} 524288`                                       | Amount of free filesystem space in bytes.                             |
-| `system_fs_size`        | `device_mac`                             | `system_fs_size{device_mac="AA:BB:CC:DD:EE:FF"} 1048576`                                      | Total filesystem size in bytes.                                       |
-| `wifi_rssi`             | `device_mac`, `ssid`, `sta_ip`           | `wifi_rssi{device_mac="AA:BB:CC:DD:EE:FF", ssid="MySSID", sta_ip="192.168.1.2"} -65`          | Wi-Fi RSSI signal strength in dBm.                                    |
-| `update_available`      | `device_mac`, `version`                  | `update_available{device_mac="AA:BB:CC:DD:EE:FF", version="1.0.0"} 1`                         | Indicates if a firmware update is available (1 for yes, 0 for no).    |
+Devices with any other `app` value are still polled for the generic `Shelly.GetDeviceInfo`, `Shelly.GetStatus`, and `Shelly.GetConfig` families; the exporter logs that no model-specific handler is registered. Switch and cover component IDs are discovered from `Shelly.GetConfig`, so multi-channel devices are collected without extra configuration.
+
+> Metrics for fields the device does not report are omitted (not exported as `0`). For example a relay without power metering exposes only `shelly_switch_state` and `shelly_switch_temperature`.
+
+> Switch and cover metrics carry a `name` label with the channel name configured on the device (for example `Gateway` or `NAS 1`); it is empty when the channel is unnamed.
 
 ### Shelly.GetDeviceInfo
 
-| Metric Name      | Labels                                                      | Example                                                                                                                   | Explanation                                                      |
-|------------------|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------|
-| `device_info`    | `device_name`, `device_id`, `device_mac`, `model`, `fw_version`, `app` | `device_info{device_name="Device1", device_id="12345", device_mac="AA:BB:CC:DD:EE:FF", model="Shelly1", fw_version="1.2.3", app="shelly"} 1` | Exposes static device information as labels such as model, firmware version, and application. |
-| `auth_enabled`   | `device_mac`                                                | `auth_enabled{device_mac="AA:BB:CC:DD:EE:FF"} 1`                                                                           | Indicates whether authentication is enabled on the device (1 for true, 0 for false).           |
+| Metric Name             | Labels                                                                  | Explanation                                                     |
+|-------------------------|-------------------------------------------------------------------------|-----------------------------------------------------------------|
+| `shelly_device_info`    | `device_name`, `device_id`, `device_mac`, `model`, `fw_version`, `app` | Static device information exposed as labels.                    |
+| `shelly_device_auth`    | `device_mac`                                                            | Indicates if authentication is enabled (1 for true, 0 for false). |
+
+### Shelly.GetStatus
+
+| Metric Name             | Labels                       | Explanation                              |
+|-------------------------|------------------------------|------------------------------------------|
+| `shelly_system_uptime`  | `device_mac`                 | System uptime in seconds.                |
+| `shelly_system_ram`     | `device_mac`, `kind`         | RAM sizes free and used in bytes.        |
+| `shelly_system_fs`      | `device_mac`, `kind`         | FS sizes free and used in bytes.         |
+| `shelly_system_wifi_rssi` | `device_mac`, `ssid`, `sta_ip` | Wi-Fi RSSI signal strength in dBm.     |
+
+### Shelly.GetConfig
+
+| Metric Name                              | Labels               | Explanation                                                       |
+|------------------------------------------|----------------------|-------------------------------------------------------------------|
+| `shelly_device_ble`                      | `device_mac`         | Indicates if BLE is enabled (1 for true, 0 for false).            |
+| `shelly_device_cloud`                    | `device_mac`         | Indicates if Cloud is enabled (1 for true, 0 for false).          |
+| `shelly_device_cloud_server`             | `device_mac`, `server` | Cloud server configuration (labels include the server address).  |
+| `shelly_device_eth`                      | `device_mac`         | Indicates if Ethernet is enabled (1 for true, 0 for false).       |
+| `selly_device_eth_ipv4_mode`             | `device_mac`, `mode` | Ethernet IPv4 mode (for example `dhcp`). Only exported when the device reports an Ethernet IPv4 mode. |
+| `shelly_device_wifi_ap`                  | `device_mac`         | Indicates if Wi-Fi AP is enabled (1 for true, 0 for false).       |
+| `shelly_device_wifi_sta`                 | `device_mac`         | Indicates if Wi-Fi STA is enabled (1 for true, 0 for false).      |
+| `shelly_device_wifi_roaming_rssi_threshold` | `device_mac`      | RSSI threshold for Wi-Fi roaming.                                 |
+
+> Note: `selly_device_eth_ipv4_mode` retains its historical `selly` namespace to avoid changing an already-exposed metric name.
+
+### Cover.GetStatus
+
+| Metric Name               | Labels                                                | Explanation                                                                                              |
+|---------------------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `shelly_cover_state`      | `device_mac`, `cover_id`, `name`                      | Current cover state (1 = open, 0 = closed, 2 = in movement, 3 = stopped, -1 = unknown).                  |
+| `shelly_cover_power`      | `device_mac`, `cover_id`, `name`                      | Active power in Watts.                                                                                   |
+| `shelly_cover_voltage`    | `device_mac`, `cover_id`, `name`                      | Present voltage in Volts.                                                                                |
+| `shelly_cover_current`    | `device_mac`, `cover_id`, `name`                      | Current draw in Amps.                                                                                    |
+| `shelly_cover_powerfactor`| `device_mac`, `cover_id`, `name`                      | Power factor.                                                                                            |
+| `shelly_cover_frequency`  | `device_mac`, `cover_id`, `name`                      | Input frequency in Hz.                                                                                   |
+| `shelly_cover_energy`     | `device_mac`, `cover_id`, `name`                      | Total consumption in Wh.                                                                                 |
+| `shelly_cover_temperature`| `device_mac`, `cover_id`, `name`, `temperature_unit`  | Temperature (`temperature_unit` is `dC` or `dF`).                                                        |
+| `shelly_cover_pos_control`| `device_mac`, `cover_id`, `name`                      | Whether position control is present.                                                                     |
+| `shelly_cover_position`   | `device_mac`, `cover_id`, `name`                      | Current position of the cover.                                                                           |
+
+### Switch.GetStatus
+
+| Metric Name                | Labels                                                 | Explanation                       |
+|----------------------------|--------------------------------------------------------|-----------------------------------|
+| `shelly_switch_state`      | `device_mac`, `switch_id`, `name`                      | Current switch state.             |
+| `shelly_switch_power`      | `device_mac`, `switch_id`, `name`                      | Active power in Watts.            |
+| `shelly_switch_voltage`    | `device_mac`, `switch_id`, `name`                      | Present voltage in Volts.         |
+| `shelly_switch_current`    | `device_mac`, `switch_id`, `name`                      | Current draw in Amps.             |
+| `shelly_switch_frequency`  | `device_mac`, `switch_id`, `name`                      | Input frequency in Hz.            |
+| `shelly_switch_energy`     | `device_mac`, `switch_id`, `name`                      | Total consumption in Wh.          |
+| `shelly_switch_temperature`| `device_mac`, `switch_id`, `name`, `temperature_unit`  | Temperature (`dC` or `dF`).       |
+
+> The metering families (`power`, `voltage`, `current`, `frequency`, `energy`) are only exported for switches that report them; relays without power measurement omit them.
+
+### Switch.GetConfig
+
+| Metric Name                          | Labels                                 | Explanation                                  |
+|--------------------------------------|----------------------------------------|----------------------------------------------|
+| `shelly_switch_initial_state`        | `device_mac`, `switch_id`, `name`       | Initial state of the switch after power loss (`1` = `on`, `0` = `off`, `2` = `restore_last`, `3` = `match_input`, `-1` = unknown). |
+| `shelly_switch_auto_on`              | `device_mac`, `switch_id`, `name`, `delay` | Auto on behavior of the switch.        |
+| `shelly_switch_auto_off`             | `device_mac`, `switch_id`, `name`, `delay` | Auto off behavior of the switch.       |
+| `shelly_switch_recover_volate_errors`| `device_mac`, `switch_id`, `name`       | Behavior after voltage errors.               |
+| `shelly_switch_power_limit`          | `device_mac`, `switch_id`, `name`       | Power limit in Watts.                        |
+| `shelly_switch_voltage_limit`        | `device_mac`, `switch_id`, `name`, `kind` | Voltage limits (`kind` is `overvoltage` or `undervoltage`). |
+| `shelly_switch_current_limit`        | `device_mac`, `switch_id`, `name`       | Current limit in Amps.                       |
+
+> Configuration families are only exported for settings the device reports; for example a device that has no `current_limit` does not expose `shelly_switch_current_limit`.
+
+### WiFi.GetStatus
+
+| Metric Name          | Labels                      | Explanation                       |
+|----------------------|-----------------------------|-----------------------------------|
+| `shelly_wifi_status` | `device_mac`, `status`, `ip`| Status of the Wi-Fi connection.   |
+| `shelly_wifi_ssid`   | `device_mac`, `ssid`        | SSID of the Wi-Fi network.        |
+| `shelly_wifi_rssi`   | `device_mac`               | Wi-Fi RSSI signal strength in dBm.|
+
+### Scrape success
+
+| Metric Name  | Labels                 | Explanation                                                                                                          |
+|--------------|------------------------|----------------------------------------------------------------------------------------------------------------------|
+| `shelly_up`  | `device_mac`, `host`   | `1` when the device's most recent poll cycle succeeded, `0` otherwise. The `host` label is always present; `device_mac` is empty until an offline-at-startup device reports its MAC. |
 
 ## Contributing
 
