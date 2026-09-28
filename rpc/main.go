@@ -46,14 +46,15 @@ func (dm *DeviceManager) RegisterDevice(device *DeviceConfig, updateInterval tim
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Initialize device type
-	if err := ShellyGetDeviceInfo.UpdateShellyGetDeviceInfoMetrics(apiClient); err != nil {
+	info, err := ShellyGetDeviceInfo.UpdateShellyGetDeviceInfoMetrics(apiClient)
+	if err != nil {
 		slog.Error("Failed to register device (unreachable)", slog.Any("error", err), slog.String("host", device.Host))
 		cancel()
 		return
 	}
-	device.Type = ShellyGetDeviceInfo.GetDeviceType()
-	device.Mac = ShellyGetDeviceInfo.GetDeviceMac()
-	device.Profile = ShellyGetDeviceInfo.GetDeviceProfile()
+	device.Type = info.App
+	device.Mac = info.Mac
+	device.Profile = info.Profile
 
 	// Discover available components from Shelly.GetStatus keys
 	switchIDs, coverIDs, err := apiClient.DiscoverComponents()
@@ -122,7 +123,7 @@ func (dm *DeviceManager) DeregisterAll() {
 func fetchAndUpdateMetrics(apiClient *client.APIClient, device *DeviceConfig) error {
 	slog.Info("Fetching and updating metrics")
 
-	err := ShellyGetDeviceInfo.UpdateShellyGetDeviceInfoMetrics(apiClient)
+	_, err := ShellyGetDeviceInfo.UpdateShellyGetDeviceInfoMetrics(apiClient)
 	if err != nil {
 		return fmt.Errorf("failed to update device information metrics: %w", err)
 	}

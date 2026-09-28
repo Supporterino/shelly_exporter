@@ -4,15 +4,16 @@ import (
 	"fmt"
 
 	"github.com/LukeEvansTech/shelly-prometheus-exporter/client"
+	"github.com/LukeEvansTech/shelly-prometheus-exporter/labelset"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type ShellyGetConfigMetrics struct {
 	BLEEnabled           *prometheus.GaugeVec
 	CloudEnabled         *prometheus.GaugeVec
-	CloudServer          *prometheus.GaugeVec
+	CloudServer          *labelset.Gauge
 	EthEnabled           *prometheus.GaugeVec
-	EthIPv4Mode          *prometheus.GaugeVec
+	EthIPv4Mode          *labelset.Gauge
 	WifiAPEnabled        *prometheus.GaugeVec
 	WifiSTAEnabled       *prometheus.GaugeVec
 	WifiRoamingThreshold *prometheus.GaugeVec
@@ -35,24 +36,24 @@ func RegisterShellyGetConfigMetrics() {
 			Name:      "cloud",
 			Help:      "Indicates if Cloud is enabled (1 for true, 0 for false)",
 		}, []string{"device_mac"}),
-		CloudServer: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		CloudServer: labelset.New(prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "device",
 			Name:      "cloud_server",
 			Help:      "Cloud server configuration (labels include server address)",
-		}, []string{"device_mac", "server"}),
+		}, []string{"device_mac", "server"})),
 		EthEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "device",
 			Name:      "eth",
 			Help:      "Indicates if Ethernet is enabled (1 for true, 0 for false)",
 		}, []string{"device_mac"}),
-		EthIPv4Mode: prometheus.NewGaugeVec(prometheus.GaugeOpts{
-			Namespace: "selly",
+		EthIPv4Mode: labelset.New(prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: "shelly",
 			Subsystem: "device",
 			Name:      "eth_ipv4_mode",
 			Help:      "Ethernet IPv4 mode (labels include mode)",
-		}, []string{"device_mac", "mode"}),
+		}, []string{"device_mac", "mode"})),
 		WifiAPEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "device",
@@ -113,7 +114,7 @@ func (m *ShellyGetConfigMetrics) UpdateMetrics(config client.ShellyGetConfigResp
 	} else {
 		m.CloudEnabled.WithLabelValues(config.Sys.Device.MAC).Set(0)
 	}
-	m.CloudServer.WithLabelValues(config.Sys.Device.MAC, config.Cloud.Server).Set(1)
+	m.CloudServer.Set(config.Sys.Device.MAC, 1, config.Sys.Device.MAC, config.Cloud.Server)
 
 	// Ethernet
 	if config.Eth.Enable {
@@ -121,7 +122,7 @@ func (m *ShellyGetConfigMetrics) UpdateMetrics(config client.ShellyGetConfigResp
 	} else {
 		m.EthEnabled.WithLabelValues(config.Sys.Device.MAC).Set(0)
 	}
-	m.EthIPv4Mode.WithLabelValues(config.Sys.Device.MAC, config.Eth.IPv4Mode).Set(1)
+	m.EthIPv4Mode.Set(config.Sys.Device.MAC, 1, config.Sys.Device.MAC, config.Eth.IPv4Mode)
 
 	// Wi-Fi
 	if config.Wifi.AP.Enable {

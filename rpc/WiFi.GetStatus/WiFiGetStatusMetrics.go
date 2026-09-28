@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	"github.com/LukeEvansTech/shelly-prometheus-exporter/client"
+	"github.com/LukeEvansTech/shelly-prometheus-exporter/labelset"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type WiFiGetStatusMetrics struct {
-	Status *prometheus.GaugeVec
-	Ssid   *prometheus.GaugeVec
+	Status *labelset.Gauge
+	Ssid   *labelset.Gauge
 	Rssi   *prometheus.GaugeVec
 }
 
@@ -17,24 +18,24 @@ var metrics *WiFiGetStatusMetrics
 
 func RegisterWiFiGetStatusMetrics() {
 	metrics = &WiFiGetStatusMetrics{
-		Status: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Status: labelset.New(prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "wifi",
 			Name:      "status",
 			Help:      "The status of the WiFi connection",
-		}, []string{"device_mac", "status", "ip"}),
-		Ssid: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		}, []string{"device_mac", "status", "ip"})),
+		Ssid: labelset.New(prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "wifi",
 			Name:      "ssid",
 			Help:      "The SSID of the WiFi network",
-		}, []string{"device_mac", "ssid"}),
+		}, []string{"device_mac", "ssid"})),
 		Rssi: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "wifi",
 			Name:      "rssi",
 			Help:      "The Received Signal Strength Indicator (RSSI) of the WiFi connection",
-		}, []string{"device_mac", "rssi"}),
+		}, []string{"device_mac"}),
 	}
 
 	prometheus.MustRegister(
@@ -57,7 +58,9 @@ func UpdateWiFiGetStatusMetrics(apiClient *client.APIClient, deviceMac string) e
 }
 
 func (m *WiFiGetStatusMetrics) UpdateMetrics(status client.WiFiGetStatusResponse, deviceMac string) {
-	m.Status.WithLabelValues(deviceMac, status.Status, status.StaIP).Set(1)
-	m.Ssid.WithLabelValues(deviceMac, status.Ssid).Set(1)
-	m.Rssi.WithLabelValues(deviceMac, fmt.Sprintf("%d", status.Rssi)).Set(float64(status.Rssi))
+	m.Status.Set(deviceMac, 1, deviceMac, status.Status, status.StaIP)
+	m.Ssid.Set(deviceMac, 1, deviceMac, status.Ssid)
+	// The value alone: an rssi LABEL made a new series on every change in
+	// signal strength, several hundred per device over a few days.
+	m.Rssi.WithLabelValues(deviceMac).Set(float64(status.Rssi))
 }

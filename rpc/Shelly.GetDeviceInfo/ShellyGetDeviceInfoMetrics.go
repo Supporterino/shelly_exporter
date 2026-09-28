@@ -4,27 +4,25 @@ import (
 	"fmt"
 
 	"github.com/LukeEvansTech/shelly-prometheus-exporter/client"
+	"github.com/LukeEvansTech/shelly-prometheus-exporter/labelset"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type ShellyGetDeviceInfoMetrics struct {
-	DeviceInfo    *prometheus.GaugeVec
-	AuthEnabled   *prometheus.GaugeVec
-	DeviceModel   *string
-	DeviceProfile *string
-	DeviceMac     *string
+	DeviceInfo  *labelset.Gauge
+	AuthEnabled *prometheus.GaugeVec
 }
 
 var metrics *ShellyGetDeviceInfoMetrics
 
 func RegisterShellyGetDeviceInfoMetrics() {
 	metrics = &ShellyGetDeviceInfoMetrics{
-		DeviceInfo: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		DeviceInfo: labelset.New(prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "device",
 			Name:      "info",
 			Help:      "Static device information exposed as labels (model, firmware version, app).",
-		}, []string{"device_name", "device_id", "device_mac", "model", "fw_version", "app"}),
+		}, []string{"device_name", "device_id", "device_mac", "model", "fw_version", "app"})),
 		AuthEnabled: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "shelly",
 			Subsystem: "device",
@@ -39,24 +37,25 @@ func RegisterShellyGetDeviceInfoMetrics() {
 	)
 }
 
-func UpdateShellyGetDeviceInfoMetrics(apiClient *client.APIClient) error {
+// UpdateShellyGetDeviceInfoMetrics fetches device info, updates its metrics
+// and returns it. The caller uses the returned value for this device's
+// identity: every device's goroutine shares this package, so state kept here
+// would belong to whichever device answered last.
+func UpdateShellyGetDeviceInfoMetrics(apiClient *client.APIClient) (client.ShellyGetDeviceInfoResponse, error) {
 	var info client.ShellyGetDeviceInfoResponse
 	err := apiClient.FetchData("/rpc/Shelly.GetDeviceInfo", &info)
 	if err != nil {
-		return fmt.Errorf("error fetching config: %w", err)
+		return info, fmt.Errorf("error fetching config: %w", err)
 	}
 
 	metrics.UpdateMetrics(info)
 
-	return nil
+	return info, nil
 }
 
 func (m *ShellyGetDeviceInfoMetrics) UpdateMetrics(info client.ShellyGetDeviceInfoResponse) {
-	m.DeviceInfo.WithLabelValues(info.Name, info.ID, info.Mac, info.Model, info.FwID, info.App).Set(1)
+	m.DeviceInfo.Set(info.Mac, 1, info.Name, info.ID, info.Mac, info.Model, info.FwID, info.App)
 	m.AuthEnabled.WithLabelValues(info.Mac).Set(boolToFloat64(info.AuthEn))
-	m.DeviceModel = &info.App
-	m.DeviceProfile = &info.Profile
-	m.DeviceMac = &info.Mac
 }
 
 func boolToFloat64(b bool) float64 {
@@ -64,16 +63,4 @@ func boolToFloat64(b bool) float64 {
 		return 1
 	}
 	return 0
-}
-
-func GetDeviceType() string {
-	return *metrics.DeviceModel
-}
-
-func GetDeviceProfile() string {
-	return *metrics.DeviceProfile
-}
-
-func GetDeviceMac() string {
-	return *metrics.DeviceMac
 }
