@@ -514,7 +514,7 @@
         "barWidth": 0.8,
         "fullHighlight": false,
         "groupWidth": 0.7,
-        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
         "orientation": "horizontal",
         "showValue": "auto",
         "stacking": "normal",
@@ -526,21 +526,75 @@
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "editorMode": "code",
-          "expr": "sum by (device_name, name) (clamp_min((max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m]) - max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)) or (last_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m]) - first_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m])) or (max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m]) - max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)) or (last_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m]) - first_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m])), 0) * on(device_mac) group_left(device_name) shelly_device_info)",
+          "expr": "label_replace(label_join(sum by (device_name, name, day) (label_replace((clamp_min((max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m]) - max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)) or (last_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m]) - first_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m])) or (max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m]) - max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)) or (last_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m]) - first_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m])), 0) * on(device_mac) group_left(device_name) shelly_device_info), \"day\", \"Today\", \"\", \"\") or label_replace((clamp_min((max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range) - max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset ($__range + 1d))) or (last_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range) - first_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)) or (max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range) - max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset ($__range + 1d))) or (last_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range) - first_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)), 0) * on(device_mac) group_left(device_name) shelly_device_info), \"day\", \"Yesterday\", \"\", \"\")), \"device\", \" \", \"device_name\", \"name\"), \"device\", \"$1\", \"device\", \"^ *(.*?) *$\")",
+          "format": "table",
           "instant": true,
-          "legendFormat": "{{device_name}} {{name}}",
+          "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
       ],
       "timeFrom": "now/d",
-      "title": "Energy Today by Device",
-      "description": "Energy since midnight (panel time range now/d). Uses the daily MAX of the pod-collapsed energy total rather than raw delta()/increase() to tolerate exporter pod restarts and counter resets.",
+      "title": "Energy Today & Yesterday by Device",
+      "description": "Two stacked bars, one per day (Yesterday and Today); each bar is segmented per channel/device. Panel time range is now/d; Yesterday is derived from the same reset-robust, pod-collapsed daily MAX using offset ($__range + 1d) for the start-of-yesterday value. Rows are pivoted with groupingToMatrix (rows=day, columns=device) so devices stack inside each day bar.",
+      "transformations": [
+        { "id": "labelsToFields", "options": { "mode": "columns" } },
+        {
+          "id": "groupingToMatrix",
+          "options": { "columnField": "device", "rowField": "day", "valueField": "Value" }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": { "day\\device": 0 },
+            "renameByName": { "day\\device": "Day" }
+          }
+        }
+      ],
       "type": "barchart"
     },
     {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "watth"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 31 },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "sum by (day) (label_replace((clamp_min((max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m]) - max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)) or (last_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m]) - first_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m])) or (max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m]) - max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)) or (last_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m]) - first_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m])), 0) * on(device_mac) group_left(device_name) shelly_device_info), \"day\", \"Today\", \"\", \"\") or label_replace((clamp_min((max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range) - max_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset ($__range + 1d))) or (last_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range) - first_over_time((max by (device_mac,switch_id,name) (shelly_switch_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)) or (max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range) - max_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset ($__range + 1d))) or (last_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range) - first_over_time((max by (device_mac,cover_id,name) (shelly_cover_energy{device_mac=~\"$device\"}))[$__range:5m] offset $__range)), 0) * on(device_mac) group_left(device_name) shelly_device_info), \"day\", \"Yesterday\", \"\", \"\"))",
+          "instant": true,
+          "legendFormat": "{{day}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "timeFrom": "now/d",
+      "title": "Energy Totals by Day (all devices)",
+      "type": "stat"
+    },
+    {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 35 },
       "id": 102,
       "panels": [],
       "title": "Switches",
@@ -583,7 +637,7 @@
           { "matcher": { "id": "byName", "options": "Current limit (A)" }, "properties": [{ "id": "unit", "value": "amp" }] }
         ]
       },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 32 },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 36 },
       "id": 20,
       "options": {
         "cellHeight": "sm",
@@ -731,7 +785,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 41 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 45 },
       "id": 21,
       "options": {
         "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -771,7 +825,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 41 },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 45 },
       "id": 22,
       "options": {
         "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -809,7 +863,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 41 },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 45 },
       "id": 23,
       "options": {
         "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -854,7 +908,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 49 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 53 },
       "id": 24,
       "options": {
         "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -897,7 +951,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 49 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 53 },
       "id": 25,
       "options": {
         "alignValue": "left",
@@ -922,7 +976,7 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 57 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 61 },
       "id": 103,
       "panels": [],
       "title": "Covers",
@@ -968,7 +1022,7 @@
           { "matcher": { "id": "byName", "options": "Temperature (C)" }, "properties": [{ "id": "unit", "value": "celsius" }] }
         ]
       },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 58 },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 62 },
       "id": 30,
       "options": {
         "cellHeight": "sm",
@@ -1118,7 +1172,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 67 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 71 },
       "id": 31,
       "options": {
         "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -1158,7 +1212,7 @@
           { "matcher": { "id": "byRegexp", "options": "/current$/" }, "properties": [{ "id": "unit", "value": "amp" }] }
         ]
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 67 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 71 },
       "id": 32,
       "options": {
         "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -1204,7 +1258,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 75 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 79 },
       "id": 33,
       "options": {
         "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -1250,7 +1304,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 75 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 79 },
       "id": 34,
       "options": {
         "alignValue": "left",
@@ -1275,7 +1329,7 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 83 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 87 },
       "id": 104,
       "panels": [],
       "title": "System & Wi-Fi",
@@ -1312,7 +1366,7 @@
           }
         ]
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 84 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 88 },
       "id": 40,
       "options": {
         "cellHeight": "sm",
@@ -1405,7 +1459,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 92 },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 96 },
       "id": 41,
       "options": {
         "displayMode": "gradient",
@@ -1453,7 +1507,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 92 },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 96 },
       "id": 42,
       "options": {
         "displayMode": "gradient",
@@ -1499,7 +1553,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 92 },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 96 },
       "id": 43,
       "options": {
         "displayMode": "gradient",
@@ -1541,7 +1595,7 @@
           { "matcher": { "id": "byName", "options": "System RSSI (dBm)" }, "properties": [{ "id": "unit", "value": "dBm" }] }
         ]
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 99 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 103 },
       "id": 44,
       "options": {
         "cellHeight": "sm",
@@ -1626,7 +1680,7 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 107 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 111 },
       "id": 105,
       "panels": [],
       "title": "Exporter Health",
@@ -1644,7 +1698,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 108 },
+      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 112 },
       "id": 50,
       "options": {
         "legend": { "calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom", "showLegend": false },
@@ -1675,7 +1729,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 6, "x": 6, "y": 108 },
+      "gridPos": { "h": 7, "w": 6, "x": 6, "y": 112 },
       "id": 51,
       "options": {
         "legend": { "calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom", "showLegend": false },
@@ -1706,7 +1760,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 108 },
+      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 112 },
       "id": 52,
       "options": {
         "legend": { "calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom", "showLegend": false },
@@ -1737,7 +1791,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 6, "x": 18, "y": 108 },
+      "gridPos": { "h": 7, "w": 6, "x": 18, "y": 112 },
       "id": 53,
       "options": {
         "legend": { "calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom", "showLegend": true },
